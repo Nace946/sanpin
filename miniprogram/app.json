@@ -1,0 +1,48 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/list/list",
+    "pages/detail/detail",
+    "pages/about/about"
+  ],
+  "subPackages": [
+    {
+      "root": "packageAdmin",
+      "name": "packageAdmin",
+      "pages": [
+        "manage/manage",
+        "publish/publish",
+        "notices/notices",
+        "banners/banners"
+      ]
+    }
+  ],
+  "tabBar": {
+    "custom": true,
+    "color": "#8f959e",
+    "selectedColor": "#2b6ef2",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/about/about",
+        "text": "关于"
+      }
+    ]
+  },
+  "window": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "本地生活信息",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f6f8",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": false
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

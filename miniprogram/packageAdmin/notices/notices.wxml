@@ -1,0 +1,54 @@
+<!-- packageAdmin/notices/notices.wxml -->
+<view class="page">
+
+  <view wx:if="{{checking}}" class="tip-wrap">正在校验身份…</view>
+
+  <view wx:elif="{{!authed}}" class="tip-wrap">
+    <view class="deny-title">无管理权限</view>
+    <view class="deny-desc">公告管理仅限平台运营人员使用。</view>
+    <view wx:if="{{openid}}" class="openid-box">
+      <view class="openid-label">当前微信账号的 openid（加入云函数环境变量 ADMIN_OPENIDS 后重新部署即可获得权限）：</view>
+      <view class="openid-value">{{openid}}</view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="intro">
+      公告在首页按下面顺序循环播放：一条字幕走完接下一条，最多 20 条；全部停用时首页公告栏自动隐藏。
+      建议单条 30 字以内，太长用户看不完。用户每天 8:00 与 17:00 各刷新一次公告。
+    </view>
+
+    <view wx:if="{{loading}}" class="tip-wrap">加载中…</view>
+
+    <view wx:elif="{{list.length === 0}}" class="tip-wrap">
+      <view class="deny-title">还没有公告</view>
+      <view class="deny-desc">点下方「＋ 新增公告」添加第一条。</view>
+    </view>
+
+    <view wx:else class="list">
+      <view class="card" wx:for="{{list}}" wx:key="_id">
+        <view class="row">
+          <text class="order">第 {{index + 1}} 条</text>
+          <text class="state {{item.enabled ? 'state-on' : ''}}">{{item.enabled ? '播放中' : '已停用'}}</text>
+        </view>
+
+        <view class="content" data-index="{{index}}" bindtap="onEdit">{{item.content}}</view>
+
+        <view class="ops">
+          <view class="op" data-index="{{index}}" data-dir="-1" bindtap="onMove">↑ 上移</view>
+          <view class="op" data-index="{{index}}" data-dir="1" bindtap="onMove">↓ 下移</view>
+          <view class="op" data-index="{{index}}" bindtap="onEdit">编辑</view>
+          <view class="op" data-index="{{index}}" bindtap="onToggle">{{item.enabled ? '停用' : '启用'}}</view>
+          <view class="op op-danger" data-index="{{index}}" bindtap="onRemove">删除</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="submit-bar">
+      <button class="submit-btn" bindtap="onAdd" loading="{{busy}}" disabled="{{busy}}">
+        {{busy ? '处理中…' : '＋ 新增公告'}}
+      </button>
+    </view>
+  </block>
+
+</view>

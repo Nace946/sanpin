@@ -1,0 +1,89 @@
+/* app.wxss 全局样式 */
+
+page {
+  --color-primary: #2b6ef2;
+  --color-primary-light: #eaf1fe;
+  --color-danger: #e34d59;
+  --color-warning: #ff8f1f;
+  --color-text: #1f2329;
+  --color-text-sub: #646a73;
+  --color-text-light: #8f959e;
+  --color-border: #ebedf0;
+  --color-bg: #f5f6f8;
+  --color-card: #ffffff;
+  --radius: 16rpx;
+  --gap: 24rpx;
+
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: 28rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  box-sizing: border-box;
+}
+
+view,
+text,
+image,
+scroll-view {
+  box-sizing: border-box;
+}
+
+/* 通用卡片 */
+.card {
+  background: var(--color-card);
+  border-radius: var(--radius);
+  padding: 28rpx;
+  margin: 0 var(--gap) 20rpx;
+}
+
+/* 分割线 */
+.divider {
+  height: 1rpx;
+  background: var(--color-border);
+  margin: 24rpx 0;
+}
+
+/* 省略号 */
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ellipsis-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 安全区 */
+.safe-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 加载 / 空状态 */
+.loading-wrap,
+.empty-wrap {
+  padding: 80rpx 0;
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 26rpx;
+}
+
+/* 底部免责声明（审核关注点，全局统一） */
+.disclaimer {
+  padding: 32rpx 40rpx 60rpx;
+  color: var(--color-text-light);
+  font-size: 22rpx;
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* 空态副文案 */
+.empty-tip {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: var(--color-text-light);
+}

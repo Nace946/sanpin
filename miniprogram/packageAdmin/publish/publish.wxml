@@ -1,0 +1,235 @@
+<!-- packageAdmin/publish/publish.wxml -->
+<view class="page">
+
+  <view wx:if="{{checking}}" class="tip-wrap">正在校验身份…</view>
+
+  <view wx:elif="{{!authed}}" class="tip-wrap">
+    <view class="deny-title">无发布权限</view>
+    <view class="deny-desc">本页面仅限平台运营人员使用。</view>
+    <view class="deny-desc">普通用户无需登录即可浏览全部信息。</view>
+    <view wx:if="{{openid}}" class="openid-box">
+      <view class="openid-label">当前微信账号的 openid（点下方按钮复制，加入云函数环境变量 ADMIN_OPENIDS 后重新部署即可获得权限）：</view>
+      <view class="openid-value">{{openid}}</view>
+      <view class="openid-copy" bindtap="onCopyOpenid">复制 openid</view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view wx:if="{{importTip}}" class="import-tip">{{importTip}}</view>
+
+    <view class="form-card">
+
+      <view class="form-item">
+        <text class="label">信息类型</text>
+        <picker range="{{typeLabels}}" value="{{typeIndex}}" bindchange="onTypeChange">
+          <view class="picker-value">{{typeLabels[typeIndex]}}</view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="label">信息权重</text>
+        <input class="input" type="number" value="{{weight}}" bindinput="onWeightInput" placeholder="0" />
+      </view>
+
+      <view class="weight-tip">权重越大排序越靠前，普通信息填 0，置顶可填 100</view>
+
+      <!-- 房源 -->
+      <block wx:if="{{type === 'house'}}">
+        <view class="form-item">
+          <text class="label">租售类型</text>
+          <picker range="{{dealLabels}}" value="{{dealIndex}}" bindchange="onDealChange">
+            <view class="picker-value">{{dealLabels[dealIndex]}}</view>
+          </picker>
+        </view>
+        <!-- 无中介：招租下的一个可选属性，不是独立分类 -->
+        <block wx:if="{{dealIndex === 0}}">
+          <view class="form-item">
+            <text class="label">无中介</text>
+            <switch checked="{{ext.noAgency}}" bindchange="onNoAgencyChange" color="#2b6ef2" />
+          </view>
+          <view class="weight-tip">开启后，卡片和详情页会标出「无中介」，房东直租的房源建议开启</view>
+        </block>
+        <view class="form-item">
+          <text class="label">所在区域</text>
+          <input class="input" value="{{ext.district}}" data-field="district" bindinput="onExtInput" placeholder="如：城东 / 开发区" />
+        </view>
+        <view class="form-item">
+          <text class="label">小区/位置</text>
+          <input class="input" value="{{ext.community}}" data-field="community" bindinput="onExtInput" placeholder="如：阳光小区 3 栋" />
+        </view>
+        <view class="form-item">
+          <text class="label">户型</text>
+          <input class="input" value="{{ext.layout}}" data-field="layout" bindinput="onExtInput" placeholder="如：两室一厅" />
+        </view>
+        <view class="form-item">
+          <text class="label">面积（㎡）</text>
+          <input class="input" type="digit" value="{{ext.area}}" data-field="area" bindinput="onExtInput" placeholder="如：89" />
+        </view>
+        <view class="form-item">
+          <text class="label">楼层</text>
+          <input class="input" value="{{ext.floor}}" data-field="floor" bindinput="onExtInput" placeholder="如：6/18 层" />
+        </view>
+        <view class="form-item">
+          <text class="label">租金（元/月）</text>
+          <input class="input" type="digit" value="{{ext.rent}}" data-field="rent" bindinput="onExtInput" placeholder="不填则显示面议" />
+        </view>
+      </block>
+
+      <!-- 二手 -->
+      <block wx:if="{{type === 'secondhand'}}">
+        <view class="form-item">
+          <text class="label">买卖类型</text>
+          <picker range="{{dealLabels}}" value="{{dealIndex}}" bindchange="onDealChange">
+            <view class="picker-value">{{dealLabels[dealIndex]}}</view>
+          </picker>
+        </view>
+        <view class="form-item">
+          <text class="label">物品分类</text>
+          <input class="input" value="{{ext.category}}" data-field="category" bindinput="onExtInput" placeholder="如：家电 / 数码 / 家具" />
+        </view>
+        <view class="form-item">
+          <text class="label">成色</text>
+          <input class="input" value="{{ext.condition}}" data-field="condition" bindinput="onExtInput" placeholder="如：九成新" />
+        </view>
+        <view class="form-item">
+          <text class="label">价格（元）</text>
+          <input class="input" type="digit" value="{{ext.price}}" data-field="price" bindinput="onExtInput" placeholder="不填则显示面议" />
+        </view>
+      </block>
+
+      <!-- 生活信息（含失物招领这个分类） -->
+      <block wx:if="{{type === 'offer'}}">
+        <view class="form-item">
+          <text class="label">所属分类</text>
+          <picker range="{{industryLabels}}" value="{{industryIndex}}" bindchange="onIndustryChange">
+            <view class="picker-value">{{industryLabels[industryIndex]}}</view>
+          </picker>
+        </view>
+
+        <!-- 分类选「失物招领」时切换成失物字段 -->
+        <block wx:if="{{industryKey === 'lostfound'}}">
+          <view class="form-item">
+            <text class="label">招领性质</text>
+            <picker range="{{lfLabels}}" value="{{lfIndex}}" bindchange="onLfTypeChange">
+              <view class="picker-value">{{lfLabels[lfIndex]}}</view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <text class="label"><text class="req">*</text>物品</text>
+            <input class="input" value="{{ext.itemName}}" data-field="itemName" bindinput="onExtInput" placeholder="如：黑色钱包 / 苹果手机" />
+          </view>
+          <view class="form-item">
+            <text class="label">地点</text>
+            <input class="input" value="{{ext.address}}" data-field="address" bindinput="onExtInput" placeholder="如：人民公园东门 / 3 路公交" />
+          </view>
+          <view class="form-item">
+            <text class="label">日期</text>
+            <picker mode="date" value="{{ext.happenAt}}" bindchange="onHappenDate">
+              <view class="picker-value">{{ext.happenAt || '请选择丢失 / 拾获日期'}}</view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <text class="label">酬谢</text>
+            <input class="input" value="{{ext.reward}}" data-field="reward" bindinput="onExtInput" placeholder="如：200 元 / 当面感谢，不填则不显示" />
+          </view>
+        </block>
+
+        <!-- 其余分类：商家活动 -->
+        <block wx:else>
+          <view class="form-item">
+            <text class="label"><text class="req">*</text>商家 / 发布方</text>
+            <input class="input" value="{{ext.merchantName}}" data-field="merchantName" bindinput="onExtInput" placeholder="如：老王麻辣烫" />
+          </view>
+          <view class="form-item">
+            <text class="label">商家地址</text>
+            <input class="input" value="{{ext.address}}" data-field="address" bindinput="onExtInput" placeholder="如：人民路 12 号" />
+          </view>
+          <view class="form-item">
+            <text class="label">开始日期</text>
+            <picker mode="date" value="{{ext.startAt}}" bindchange="onStartDate">
+              <view class="picker-value">{{ext.startAt || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <text class="label"><text class="req">*</text>截止日期</text>
+            <picker mode="date" value="{{ext.expireAt}}" bindchange="onExpireDate">
+              <view class="picker-value">{{ext.expireAt || '请选择'}}</view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <text class="label">是否广告位</text>
+            <switch checked="{{ext.isAd}}" bindchange="onAdChange" color="#2b6ef2" />
+          </view>
+        </block>
+      </block>
+
+      <view class="form-item col">
+        <text class="label"><text class="req">*</text>标题</text>
+        <input class="input" value="{{form.title}}" data-field="title" bindinput="onFormInput" placeholder="一句话说清信息内容（30 字内）" maxlength="30" />
+      </view>
+
+      <view class="form-item col">
+        <text class="label">摘要</text>
+        <input class="input" value="{{form.summary}}" data-field="summary" bindinput="onFormInput" placeholder="列表页展示的一句话（40 字内，选填）" maxlength="40" />
+      </view>
+
+      <view class="form-item col">
+        <text class="label"><text class="req">*</text>详细说明</text>
+        <textarea class="textarea" value="{{form.content}}" data-field="content" bindinput="onFormInput" placeholder="补充说明、使用条件、注意事项等" maxlength="{{contentMax}}" />
+        <text class="counter">{{form.content.length}}/{{contentMax}}</text>
+      </view>
+
+      <view class="form-item col">
+        <text class="label">标签（选填，最多 3 个，每个 6 字内）</text>
+        <view class="tag-edit">
+          <view class="tag-chip" wx:for="{{tags}}" wx:key="*this">
+            <text>{{item}}</text>
+            <text class="tag-del" data-index="{{index}}" bindtap="onTagDelete">✕</text>
+          </view>
+          <block wx:if="{{tags.length < 3}}">
+            <input
+              class="tag-input"
+              value="{{tagInput}}"
+              bindinput="onTagInput"
+              bindconfirm="onTagAdd"
+              confirm-type="done"
+              placeholder="如：近地铁"
+              maxlength="6"
+            />
+            <view class="tag-add" bindtap="onTagAdd">添加</view>
+          </block>
+        </view>
+        <text class="tag-tip">会显示在首页卡片标题下方，如「可短租」「学生立减」「同城面交」</text>
+      </view>
+
+      <view class="form-item col">
+        <text class="label">图片（最多 6 张，禁止含二维码/微信号）</text>
+        <view class="img-list">
+          <view class="img-box" wx:for="{{form.images}}" wx:key="*this">
+            <image class="img" src="{{item}}" mode="aspectFill" />
+            <view class="img-del" data-index="{{index}}" bindtap="onDeleteImage">✕</view>
+          </view>
+          <view wx:if="{{form.images.length < 6}}" class="img-add" bindtap="onChooseImage">＋</view>
+        </view>
+      </view>
+
+      <view class="form-item col">
+        <text class="label">联系人</text>
+        <input class="input" value="{{form.contactName}}" data-field="contactName" bindinput="onFormInput" placeholder="如：王先生 / 张女士" maxlength="20" />
+      </view>
+
+      <view class="form-item col">
+        <text class="label"><text class="req">*</text>联系电话</text>
+        <input class="input" type="number" value="{{form.contactPhone}}" data-field="contactPhone" bindinput="onFormInput" placeholder="需已获得对方授权公开" maxlength="20" />
+      </view>
+
+    </view>
+
+    <view class="submit-bar">
+      <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+        {{submitting ? '提交中…' : (editMode ? '保存修改' : '发布')}}
+      </button>
+    </view>
+  </block>
+
+</view>

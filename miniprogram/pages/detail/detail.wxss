@@ -1,0 +1,270 @@
+/* pages/detail/detail.wxss */
+
+.page {
+  min-height: 100vh;
+  padding-top: 20rpx;
+  padding-bottom: 40rpx;
+}
+
+.expired-bar {
+  margin: 0 var(--gap) 16rpx;
+  padding: 18rpx 24rpx;
+  font-size: 24rpx;
+  color: #b26a00;
+  background: #fff4e0;
+  border-radius: 12rpx;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: var(--radius);
+  padding: 28rpx;
+  margin: 0 var(--gap) 16rpx;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 18rpx;
+}
+
+/* 详情页标签比列表卡片大一档（24rpx），标题上方一眼能看清分类与标签 */
+.tag {
+  display: inline-block;
+  padding: 6rpx 16rpx;
+  font-size: 24rpx;
+  line-height: 1.35;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: 8rpx;
+}
+
+.tag-sub {
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+}
+
+/* 招租信息的「无中介」标记：与列表卡片同色系（绿） */
+.tag-agency {
+  color: #1a9b52;
+  background: #e8f7ee;
+}
+
+/* 管理员自定义标签 */
+.tag-custom {
+  color: #646a73;
+  background: #f2f4f7;
+}
+
+.tag-ad {
+  color: #b26a00;
+  background: #fff4e0;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  color: var(--color-text-light);
+}
+
+.meta-dot {
+  margin: 0 10rpx;
+}
+
+/* 图片：窗口固定高度，任意尺寸原图都不改变版面 */
+.img-card {
+  position: relative;
+  margin: 0 var(--gap) 16rpx;
+  background: #ffffff;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.img-swiper {
+  width: 100%;
+  height: 420rpx;
+}
+
+.detail-img {
+  display: block;
+  width: 100%;
+  height: 420rpx;
+  background: #f2f3f5;
+}
+
+.img-count {
+  position: absolute;
+  right: 20rpx;
+  bottom: 20rpx;
+  padding: 4rpx 16rpx;
+  font-size: 21rpx;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.42);
+  border-radius: 20rpx;
+}
+
+/* 扩展字段 */
+.ext-row {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.ext-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ext-row:first-child {
+  padding-top: 0;
+}
+
+.ext-label {
+  width: 160rpx;
+  font-size: 26rpx;
+  color: var(--color-text-light);
+  flex-shrink: 0;
+}
+
+.ext-value {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+/* 正文 */
+.block-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 20rpx;
+}
+
+.content {
+  display: block;
+  /* 详细说明是详情页的阅读主体，字号比列表正文大一档（28 → 32rpx），行高保持 1.8 */
+  font-size: 32rpx;
+  line-height: 1.8;
+  color: var(--color-text-sub);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 收起态：只露 6 行（32rpx × 1.8 × 6 ≈ 345rpx）；max-height 作为兜底，
+   万一个别内核的 line-clamp 对 pre-wrap 文本不生效，也不会把整段铺开 */
+.content-fold {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  /* 32rpx × 1.8 × 6 行 = 345.6rpx，取 346 让兜底截断正好卡在第 6 行末尾 */
+  max-height: 346rpx;
+  overflow: hidden;
+}
+
+.fold-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--color-border);
+  font-size: 26rpx;
+  line-height: 1.4;
+  color: var(--color-primary);
+}
+
+.fold-toggle-hover {
+  opacity: 0.6;
+}
+
+.fold-arrow {
+  width: 0;
+  height: 0;
+  margin-left: 10rpx;
+  border-left: 9rpx solid transparent;
+  border-right: 9rpx solid transparent;
+  border-top: 10rpx solid currentColor;
+  transition: transform 0.2s ease;
+}
+
+.fold-arrow-up {
+  transform: rotate(180deg);
+}
+
+/* 联系方式 */
+.contact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 0 24rpx;
+}
+
+.contact-name {
+  font-size: 28rpx;
+  color: var(--color-text-sub);
+}
+
+.contact-phone {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 1rpx;
+}
+
+.contact-btns {
+  display: flex;
+  gap: 20rpx;
+}
+
+.btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+}
+
+.btn-primary {
+  color: #ffffff;
+  background: var(--color-primary);
+}
+
+.btn-ghost {
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+}
+
+/* 说明 */
+.notice-text {
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--color-text-light);
+  margin-bottom: 12rpx;
+}
+
+.notice-text:last-child {
+  margin-bottom: 0;
+}
+
+.back-btn {
+  display: inline-block;
+  margin-top: 32rpx;
+  padding: 16rpx 48rpx;
+  font-size: 26rpx;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: 36rpx;
+}

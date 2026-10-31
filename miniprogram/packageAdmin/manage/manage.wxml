@@ -1,0 +1,215 @@
+<!-- packageAdmin/manage/manage.wxml -->
+<view class="page">
+
+  <view wx:if="{{checking}}" class="tip-wrap">正在校验身份…</view>
+
+  <view wx:elif="{{!authed}}" class="tip-wrap">
+    <view class="deny-title">无管理权限</view>
+    <view class="deny-desc">本页面仅限平台运营人员使用。</view>
+    <view wx:if="{{openid}}" class="openid-box">
+      <view class="openid-label">当前微信账号的 openid（点下方按钮复制，加入云函数环境变量 ADMIN_OPENIDS 后重新部署即可获得权限）：</view>
+      <view class="openid-value">{{openid}}</view>
+      <view class="openid-copy" bindtap="onCopyOpenid">复制 openid</view>
+    </view>
+  </view>
+
+  <block wx:else>
+
+    <!-- 数据概览 -->
+    <view class="stats-card">
+      <view class="stats-grid">
+        <view class="stat-cell">
+          <view class="stat-num">{{stats.byType.house}}</view>
+          <view class="stat-label">房源</view>
+        </view>
+        <view class="stat-cell">
+          <view class="stat-num">{{stats.byType.secondhand}}</view>
+          <view class="stat-label">二手</view>
+        </view>
+        <view class="stat-cell">
+          <view class="stat-num">{{stats.byType.offer}}</view>
+          <view class="stat-label">生活</view>
+        </view>
+        <view class="stat-cell">
+          <view class="stat-num">{{stats.totalViews}}</view>
+          <view class="stat-label">总浏览</view>
+        </view>
+      </view>
+      <view class="stats-line">
+        已发布 {{stats.byStatus.published}} · 已下架 {{stats.byStatus.offline}} · 已过期 {{stats.byStatus.expired}} · 已删除 {{stats.byStatus.deleted}}
+      </view>
+    </view>
+
+    <!-- 操作条 -->
+    <view class="action-bar">
+      <view class="act-btn act-primary" bindtap="onCreate">＋ 新建信息</view>
+      <view class="act-btn act-ghost" bindtap="onImport">⇩ 一键导入</view>
+      <view class="act-btn act-ghost" bindtap="onNotices">公告</view>
+    </view>
+
+    <!-- 测试数据提示条 -->
+    <view wx:if="{{stats.testCount > 0}}" class="test-bar">
+      <text class="test-text">当前有 {{stats.testCount}} 条测试数据</text>
+      <text class="test-op" bindtap="onClearTest">一键清除</text>
+    </view>
+
+    <!-- 类型筛选 -->
+    <scroll-view class="tabs" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view
+        class="tab {{activeType === item.key ? 'tab-active' : ''}}"
+        wx:for="{{typeTabs}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="onTypeTap"
+      >{{item.label}}</view>
+    </scroll-view>
+
+    <!-- 状态筛选 -->
+    <scroll-view class="tabs tabs-sub" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view
+        class="tab tab-sm {{activeStatus === item.key ? 'tab-active-sm' : ''}}"
+        wx:for="{{statusTabs}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="onStatusTap"
+      >{{item.label}}</view>
+    </scroll-view>
+
+    <!-- 搜索 -->
+    <view class="search-area">
+      <view class="search-box">
+        <text class="search-icon">🔍</text>
+        <input
+          class="search-input"
+          value="{{keyword}}"
+          placeholder="搜索标题"
+          confirm-type="search"
+          bindinput="onKeywordInput"
+          bindconfirm="onSearch"
+        />
+        <text wx:if="{{keyword}}" class="search-clear" bindtap="onClearKeyword">✕</text>
+      </view>
+    </view>
+
+    <!-- 列表 -->
+    <view wx:if="{{loading && list.length === 0}}" class="tip-wrap">加载中…</view>
+
+    <view wx:elif="{{list.length === 0}}" class="tip-wrap">
+      <view>当前筛选条件下没有信息</view>
+      <view
+        wx:if="{{stats.total === 0}}"
+        class="seed-btn"
+        bindtap="onSeed"
+      >{{seeding ? '写入中…' : '一键写入 9 条测试数据'}}</view>
+      <view wx:if="{{stats.total === 0}}" class="seed-hint">含房源 / 二手 / 生活信息（含失物招领）示例，写入后可一键清除</view>
+    </view>
+
+    <view wx:else class="m-list">
+      <view class="m-item" wx:for="{{list}}" wx:key="_id">
+        <view class="m-head">
+          <text class="m-type">{{item.typeLabel}}</text>
+          <text class="m-status status-{{item.status}}">{{item.statusLabel}}</text>
+        </view>
+
+        <view class="m-title ellipsis-2">{{item.title}}</view>
+
+        <view class="m-meta">
+          <text class="m-weight">权重 {{item.weight}}</text>
+          <text class="dot">·</text>
+          <text>{{item.views}} 浏览</text>
+          <text class="dot">·</text>
+          <text>{{item.timeText}}</text>
+        </view>
+
+        <view class="m-ops">
+          <view class="op" data-id="{{item._id}}" bindtap="onEdit">编辑</view>
+
+          <view
+            wx:if="{{item.status === 'published'}}"
+            class="op"
+            data-id="{{item._id}}"
+            data-status="offline"
+            bindtap="onSetStatus"
+          >下架</view>
+
+          <view
+            wx:elif="{{item.status === 'offline'}}"
+            class="op"
+            data-id="{{item._id}}"
+            data-status="published"
+            bindtap="onSetStatus"
+          >上架</view>
+
+          <view
+            wx:elif="{{item.status === 'expired'}}"
+            class="op"
+            data-id="{{item._id}}"
+            data-status="published"
+            bindtap="onSetStatus"
+          >重新上架</view>
+
+          <view
+            wx:elif="{{item.status === 'deleted'}}"
+            class="op"
+            data-id="{{item._id}}"
+            data-status="published"
+            bindtap="onSetStatus"
+          >恢复</view>
+
+          <view
+            wx:if="{{item.status !== 'deleted'}}"
+            class="op {{item.weight > 0 ? 'op-active' : ''}}"
+            data-id="{{item._id}}"
+            data-weight="{{item.weight}}"
+            bindtap="onTop"
+          >{{item.weight > 0 ? '取消置顶' : '置顶'}}</view>
+
+          <view
+            wx:if="{{item.status !== 'deleted'}}"
+            class="op op-danger"
+            data-id="{{item._id}}"
+            bindtap="onDelete"
+          >删除</view>
+        </view>
+      </view>
+
+      <view class="load-more">
+        <text wx:if="{{loading}}">加载中…</text>
+        <text wx:elif="{{!hasMore}}">— 没有更多了 —</text>
+        <text wx:else>上拉加载更多</text>
+      </view>
+    </view>
+
+  </block>
+
+  <!-- 一键导入弹层：选类型 → 复制模板 → 读剪贴板解析 → 跳发布页自动填表 -->
+  <view wx:if="{{importShow}}" class="mask" bindtap="onImportClose">
+    <view class="sheet" catchtap="onSheetTap">
+      <view class="sheet-head">
+        <text class="sheet-title">一键导入</text>
+        <text class="sheet-close" bindtap="onImportClose">✕</text>
+      </view>
+      <view class="sheet-desc">选类型 → 复制模板去填写 → 复制回来点「读取剪贴板导入」，识别到的字段会自动填进发布页。</view>
+
+      <view class="sheet-types">
+        <view
+          class="sheet-type {{importType === item.key ? 'sheet-type-on' : ''}}"
+          wx:for="{{importTypes}}"
+          wx:key="key"
+          data-key="{{item.key}}"
+          bindtap="onImportType"
+        >{{item.label}}</view>
+      </view>
+
+      <scroll-view class="tpl-box" scroll-y>
+        <text class="tpl-text" user-select="{{true}}">{{importTemplate}}</text>
+      </scroll-view>
+
+      <view class="sheet-btns">
+        <view class="sheet-btn" bindtap="onCopyTemplate">复制模板</view>
+        <view class="sheet-btn sheet-btn-primary" bindtap="onDoImport">读取剪贴板导入</view>
+      </view>
+    </view>
+  </view>
+
+</view>

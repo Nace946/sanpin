@@ -1,0 +1,99 @@
+<!-- pages/list/list.wxml -->
+<view class="page">
+
+  <view class="header">
+    <!-- 房源：招租/求租；二手：出售/求购 —— 搜索框上方的切换，替代原来的筛选行 -->
+    <view wx:if="{{segs.length}}" class="seg">
+      <view
+        class="seg-item {{activeTab === item.key ? 'seg-active' : ''}}"
+        wx:for="{{segs}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="onTabTap"
+      >{{item.label}}</view>
+    </view>
+
+    <!-- 搜索框下方留白由 .header 的 padding-bottom 提供（见 list.wxss 注释） -->
+    <view class="search-box">
+      <!-- 放大镜用 CSS 画（圆形 + 手柄），避免 emoji 在不同机型上彩色/像素化不一致 -->
+      <view class="search-icon"></view>
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜索标题或内容"
+        placeholder-style="color:#a8aeb8"
+        focus="{{autoFocus}}"
+        confirm-type="search"
+        bindinput="onKeywordInput"
+        bindconfirm="onSearch"
+      />
+      <text wx:if="{{keyword}}" class="search-clear" bindtap="onClearKeyword">✕</text>
+    </view>
+
+    <scroll-view wx:if="{{tabs.length}}" class="tabs" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view
+        class="tab {{activeTab === item.key ? 'tab-active' : ''}}"
+        wx:for="{{tabs}}"
+        wx:key="label"
+        data-key="{{item.key}}"
+        bindtap="onTabTap"
+      >
+        <text class="tab-text">{{item.label}}</text>
+        <!-- 下划线用真实元素（未选中透明），间距可控；所有项都渲染以保证高度一致 -->
+        <view class="tab-line {{activeTab === item.key ? 'tab-line-on' : ''}}"></view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view wx:if="{{loading && list.length === 0}}" class="loading-wrap">加载中…</view>
+
+  <view wx:elif="{{list.length === 0}}" class="empty-wrap">
+    <view>暂无相关信息</view>
+    <view class="empty-tip">换个关键词或分类试试</view>
+  </view>
+
+  <block wx:else>
+    <view class="list-card">
+      <view
+        class="item"
+        wx:for="{{list}}"
+        wx:key="_id"
+        data-id="{{item._id}}"
+        bindtap="onItemTap"
+      >
+        <view class="item-line">
+          <text wx:if="{{item.noAgency}}" class="item-tag item-tag-agency">无中介</text>
+          <text class="item-tag">{{item.tagText}}</text>
+          <text wx:if="{{item.isAd}}" class="item-tag item-tag-ad">广告</text>
+          <text class="item-title ellipsis">{{item.title}}</text>
+          <text wx:if="{{item.priceText}}" class="item-price">{{item.priceText}}</text>
+        </view>
+        <!-- 详细说明：单行，超长省略；没填摘要时取正文开头（由列表接口截好） -->
+        <view wx:if="{{item.desc}}" class="item-desc ellipsis">{{item.desc}}</view>
+
+        <!-- 卡片最底行：左侧内容列（区域、标签，各自为空则不渲染），时间贴住最后一行的右下角 -->
+        <view class="item-foot">
+          <view class="foot-main">
+            <view wx:if="{{item.areaText}}" class="item-area ellipsis">{{item.areaText}}</view>
+            <view wx:if="{{item.tags.length}}" class="item-tags">
+              <text
+                class="tag"
+                wx:for="{{item.tags}}"
+                wx:for-item="tag"
+                wx:key="*this"
+              >{{tag}}</text>
+            </view>
+          </view>
+          <text class="item-time">{{item.timeText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="load-more">
+      <text wx:if="{{loading}}">加载中…</text>
+      <text wx:elif="{{!hasMore}}">— 没有更多了 —</text>
+      <text wx:else>上拉加载更多</text>
+    </view>
+  </block>
+
+</view>

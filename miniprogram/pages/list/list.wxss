@@ -1,0 +1,261 @@
+/* pages/list/list.wxss */
+
+.page {
+  min-height: 100vh;
+  padding-bottom: 20rpx;
+}
+
+/* 头部：搜索 + 二级 Tab
+   padding-bottom 必须留在父容器上：子元素用 margin-bottom 会与父元素发生
+   margin 塌陷，白底不会跟着延伸，留白区露出的是灰色页面背景 */
+.header {
+  background: #ffffff;
+  padding: 20rpx var(--gap);
+}
+
+/* 房源/二手：搜索框上方的两段切换 */
+.seg {
+  display: flex;
+  padding: 4rpx;
+  margin-bottom: 16rpx;
+  background: var(--color-bg);
+  border-radius: 12rpx;
+}
+
+.seg-item {
+  flex: 1;
+  height: 60rpx;
+  line-height: 60rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--color-text-sub);
+  border-radius: 10rpx;
+}
+
+.seg-active {
+  color: var(--color-text);
+  font-weight: 600;
+  background: #ffffff;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.06);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  height: 68rpx;
+  padding: 0 20rpx;
+  background: var(--color-bg);
+  /* 与卡片同一圆角体系（--radius 16rpx），不再是独立的 14rpx */
+  border-radius: var(--radius);
+}
+
+/* 放大镜：CSS 画（圆 + 45° 手柄），不用 emoji，避免各机型彩色差异与像素化 */
+.search-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 22rpx;
+  height: 22rpx;
+  margin-right: 14rpx;
+  border: 3rpx solid #b2b8c2;
+  border-radius: 50%;
+}
+
+.search-icon::after {
+  content: '';
+  position: absolute;
+  right: -8rpx;
+  bottom: -5rpx;
+  width: 11rpx;
+  height: 3rpx;
+  border-radius: 2rpx;
+  background: #b2b8c2;
+  transform: rotate(45deg);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 26rpx;
+  color: var(--color-text);
+}
+
+.search-clear {
+  padding: 0 6rpx;
+  font-size: 24rpx;
+  color: var(--color-text-light);
+}
+
+/* 底部留白统一由 .header 的 padding 提供，这里只留上间距 */
+.tabs {
+  display: flex;
+  white-space: nowrap;
+  padding: 14rpx 0 0;
+}
+
+/* 行业筛选：纯文字标签，选中项主色 + 底部短横线。
+   不用色块，避免与上方搜索框形成「一大块 + 五小块」的方块阵列 */
+.tab {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 48rpx;
+  padding-top: 6rpx;
+}
+
+.tab-text {
+  font-size: 28rpx;
+  line-height: 1.2;
+  color: var(--color-text-sub);
+}
+
+/* 选中只换颜色 + 下划线，不改字重，避免文字变宽导致整行标签位移抖动 */
+.tab-active .tab-text {
+  color: var(--color-primary);
+}
+
+/* 下划线紧贴文字：4rpx 间距 + 1.2 行高的内部留白，视觉约 7rpx */
+.tab-line {
+  width: 28rpx;
+  height: 4rpx;
+  margin-top: 4rpx;
+  border-radius: 2rpx;
+  background: transparent;
+}
+
+.tab-line-on {
+  background: var(--color-primary);
+}
+
+/* 列表：整块白卡 + 分隔线，逐条紧凑单双行 */
+.list-card {
+  margin: 16rpx var(--gap) 0;
+  background: #ffffff;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.item {
+  padding: 24rpx 28rpx;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item:active {
+  background: #fafbfc;
+}
+
+.item-line {
+  display: flex;
+  align-items: center;
+}
+
+.item-tag {
+  flex-shrink: 0;
+  margin-right: 12rpx;
+  padding: 3rpx 12rpx;
+  font-size: 21rpx;
+  line-height: 1.5;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: 6rpx;
+}
+
+.item-tag-ad {
+  color: #b26a00;
+  background: #fff4e0;
+}
+
+/* 招租信息标记「无中介」：绿色，与蓝色类型标签区分开 */
+.item-tag-agency {
+  color: #1a9b52;
+  background: #e8f7ee;
+}
+
+.item-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 30rpx;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.item-price {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+/* 详细说明一行：标题与属性行之间的补充信息，单行省略，不撑高卡片 */
+.item-desc {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.45;
+  color: var(--color-text-sub);
+}
+
+/* 卡片最底行：左侧内容列（区域 / 标签），时间贴住最后一行的右下角 */
+.item-foot {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 10rpx;
+}
+
+/* 内容列：区域在上、标签在下；两者都没有时整列不占位，时间自然贴右 */
+.foot-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 区域 / 户型等属性：内容为空时由 wxml 整行隐藏，不会留下空白 */
+.item-area {
+  font-size: 23rpx;
+  line-height: 1.4;
+  color: var(--color-text-light);
+}
+
+/* 自定义标签行：灰底小字，弱于上方正文，不与类型标签抢视觉 */
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+/* 只有区域与标签同时存在时才需要这一行间距 */
+.item-area + .item-tags {
+  margin-top: 8rpx;
+}
+
+.tag {
+  padding: 2rpx 10rpx;
+  font-size: 20rpx;
+  line-height: 1.5;
+  color: #646a73;
+  background: #f2f4f7;
+  border-radius: 6rpx;
+}
+
+/* 无标签时与区域同一行右端；有标签时贴住标签行底边 */
+.item-time {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  font-size: 23rpx;
+  line-height: 1.4;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+.load-more {
+  padding: 32rpx 0 40rpx;
+  text-align: center;
+  font-size: 23rpx;
+  color: var(--color-text-light);
+}

@@ -1,0 +1,105 @@
+<!-- pages/detail/detail.wxml -->
+<view class="page">
+
+  <view wx:if="{{loading}}" class="loading-wrap">加载中…</view>
+
+  <view wx:elif="{{!info}}" class="empty-wrap">
+    <view>信息不存在或已下架</view>
+    <view class="back-btn" bindtap="onBackHome">返回首页</view>
+  </view>
+
+  <block wx:else>
+
+    <view wx:if="{{expired}}" class="expired-bar">该信息已过期，以下内容仅供参考</view>
+
+    <view class="card">
+      <view class="tag-row">
+        <!-- 无中介最靠前：招租信息里最关心的一个条件，先于分类/类型展示 -->
+        <text wx:if="{{info.noAgency}}" class="tag tag-agency">无中介</text>
+        <text class="tag">{{info.typeLabel}}</text>
+        <text class="tag tag-sub">{{info.tagText}}</text>
+        <text class="tag tag-custom" wx:for="{{info.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+        <text wx:if="{{info.isAd}}" class="tag tag-ad">广告</text>
+      </view>
+      <view class="title">{{info.title}}</view>
+      <view class="meta">
+        <text>{{info.timeText}}</text>
+        <text class="meta-dot">·</text>
+        <text>{{info.views}} 次浏览</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">详细说明</view>
+      <!-- 长文默认收起 6 行，点「展开全文」看完整内容；短内容不显示按钮。用 text 而非 view，保留长按选中复制 -->
+      <text class="content {{needFold && folded ? 'content-fold' : ''}}">{{info.content}}</text>
+      <view wx:if="{{needFold}}" class="fold-toggle" hover-class="fold-toggle-hover" bindtap="onToggleFold">
+        <text>{{folded ? '展开全文' : '收起'}}</text>
+        <view class="fold-arrow {{folded ? '' : 'fold-arrow-up'}}"></view>
+      </view>
+    </view>
+
+    <!-- 图片窗口固定高度（420rpx），不随原图尺寸变化；aspectFit 完整显示不裁切，点击查看原图 -->
+    <view wx:if="{{info.images && info.images.length}}" class="img-card">
+      <swiper
+        class="img-swiper"
+        current="{{imgIndex}}"
+        bindchange="onSwiperChange"
+        indicator-dots="{{info.images.length > 1}}"
+        indicator-color="rgba(255,255,255,0.5)"
+        indicator-active-color="#ffffff"
+      >
+        <swiper-item wx:for="{{info.images}}" wx:key="*this">
+          <image
+            class="detail-img"
+            src="{{item}}"
+            mode="aspectFit"
+            data-index="{{index}}"
+            data-src="{{item}}"
+            bindtap="onPreview"
+            binderror="onImgError"
+          />
+        </swiper-item>
+      </swiper>
+      <view wx:if="{{info.images.length > 1}}" class="img-count">{{imgIndex + 1}} / {{info.images.length}}</view>
+    </view>
+
+    <view wx:if="{{extFields.length}}" class="card">
+      <view class="ext-row" wx:for="{{extFields}}" wx:key="label">
+        <text class="ext-label">{{item.label}}</text>
+        <text class="ext-value">{{item.value}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{info.contact && info.contact.phone}}" class="card">
+      <view class="block-title">联系方式</view>
+      <view class="contact-row">
+        <text class="contact-name">{{info.contact.name || '联系人'}}</text>
+        <text class="contact-phone">{{info.contact.phone}}</text>
+      </view>
+      <view class="contact-btns">
+        <view class="btn btn-ghost" bindtap="onCopyPhone">复制号码</view>
+        <view class="btn btn-primary" bindtap="onCallPhone">拨打电话</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">信息说明</view>
+      <view class="notice-text">
+        1. 本信息由平台运营方统一整理发布，平台仅提供信息展示，不参与交易、不收取任何中介费用。
+      </view>
+      <view class="notice-text">
+        2. 信息真实性请自行核实；涉及转账、定金、押金等，请务必当面确认，谨防诈骗。
+      </view>
+      <view class="notice-text">
+        3. 若本信息存在错误、过期或侵犯您的权益，请通过「关于」页提供的方式联系我们，我们将及时处理。
+      </view>
+    </view>
+
+    <view class="disclaimer" bindtap="onGoAbout">
+      免责声明与举报方式 ›
+    </view>
+
+  </block>
+
+</view>

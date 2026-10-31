@@ -1,0 +1,9 @@
+{
+  "name": "expireOffers",
+  "version": "1.0.0",
+  "description": "定时将过期优惠信息置为 expired",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

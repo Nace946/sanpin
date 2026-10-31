@@ -1,0 +1,32 @@
+<!-- custom-tab-bar/index.wxml -->
+<view class="tabbar">
+  <view class="tabbar-inner">
+
+    <!-- 首页：点击切页；长按（系统默认时长）= 隐藏的强制刷新（无任何文字提示） -->
+    <view
+      class="tabbar-item {{selected === 0 ? 'tabbar-item-on' : ''}}"
+      data-index="0"
+      bindtap="onTabTap"
+      bindlongpress="onHomeLongPress"
+    >
+      <text class="tabbar-text">首页</text>
+    </view>
+
+    <!-- 中间：联系客服。点击直接唤起客服会话，不切换页面 -->
+    <view wx:if="{{kfCorpId && kfUrl}}" class="tabbar-item tabbar-service" bindtap="onServiceTap">
+      <text class="tabbar-text">联系客服</text>
+    </view>
+    <button wx:else class="tabbar-item tabbar-service" open-type="contact">
+      <text class="tabbar-text">联系客服</text>
+    </button>
+
+    <view
+      class="tabbar-item {{selected === 1 ? 'tabbar-item-on' : ''}}"
+      data-index="1"
+      bindtap="onTabTap"
+    >
+      <text class="tabbar-text">关于</text>
+    </view>
+
+  </view>
+</view>

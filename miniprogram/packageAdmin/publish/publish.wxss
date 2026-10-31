@@ -1,0 +1,279 @@
+/* packageAdmin/publish/publish.wxss */
+
+.page {
+  min-height: 100vh;
+  padding-bottom: 180rpx;
+}
+
+.tip-wrap {
+  padding: 160rpx 48rpx;
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 26rpx;
+}
+
+.deny-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 16rpx;
+}
+
+.deny-desc {
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: var(--color-text-light);
+}
+
+.openid-box {
+  margin-top: 48rpx;
+  padding: 24rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  text-align: left;
+}
+
+.openid-label {
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: var(--color-text-light);
+}
+
+.openid-value {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.form-card {
+  background: #ffffff;
+  margin: 20rpx var(--gap);
+  border-radius: var(--radius);
+  padding: 8rpx 28rpx;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  min-height: 100rpx;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.form-item.col {
+  display: block;
+  padding: 24rpx 0;
+}
+
+.label {
+  width: 200rpx;
+  font-size: 27rpx;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.form-item.col .label {
+  display: block;
+  width: auto;
+  margin-bottom: 16rpx;
+  font-size: 25rpx;
+  color: var(--color-text-sub);
+}
+
+.input {
+  flex: 1;
+  font-size: 27rpx;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.form-item.col .input {
+  text-align: left;
+  min-height: 64rpx;
+}
+
+.picker-value {
+  font-size: 27rpx;
+  color: var(--color-text);
+  text-align: right;
+  min-width: 200rpx;
+}
+
+.weight-tip {
+  padding: 0 0 20rpx;
+  font-size: 21rpx;
+  line-height: 1.6;
+  color: var(--color-text-light);
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.textarea {
+  width: 100%;
+  /* 上限提到 1000 字后，适当加高可视区域，长文编辑时不用频繁滚动 */
+  height: 260rpx;
+  font-size: 27rpx;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.counter {
+  display: block;
+  text-align: right;
+  font-size: 22rpx;
+  color: var(--color-text-light);
+}
+
+/* 图片 */
+.img-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.img-box {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+}
+
+.img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  background: #f2f3f5;
+}
+
+.img-del {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+}
+
+.img-add {
+  width: 160rpx;
+  height: 160rpx;
+  line-height: 160rpx;
+  text-align: center;
+  font-size: 48rpx;
+  color: var(--color-text-light);
+  background: var(--color-bg);
+  border-radius: 12rpx;
+}
+
+/* 提交 */
+.submit-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1rpx solid var(--color-border);
+}
+
+.submit-btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--color-primary);
+  border-radius: 12rpx;
+}
+
+.submit-btn[disabled] {
+  opacity: 0.6;
+}
+
+/* 复制 openid */
+.openid-copy {
+  display: inline-block;
+  margin-top: 20rpx;
+  padding: 12rpx 36rpx;
+  font-size: 25rpx;
+  color: #ffffff;
+  background: var(--color-primary);
+  border-radius: 999rpx;
+}
+
+/* 必填标记 */
+.req {
+  color: var(--color-danger);
+  margin-right: 4rpx;
+}
+
+/* 一键导入提示 */
+.import-tip {
+  margin: 0 var(--gap) 16rpx;
+  padding: 18rpx 24rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: 12rpx;
+}
+
+/* 自定义标签编辑 */
+.tag-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 8rpx;
+}
+
+.tag-chip {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 12rpx;
+  font-size: 24rpx;
+  color: var(--color-text-sub);
+  background: #f2f4f7;
+  border-radius: 8rpx;
+}
+
+.tag-del {
+  margin-left: 8rpx;
+  font-size: 22rpx;
+  color: var(--color-text-light);
+}
+
+.tag-input {
+  flex: 1;
+  min-width: 220rpx;
+  height: 60rpx;
+  padding: 0 16rpx;
+  font-size: 26rpx;
+  background: var(--color-bg);
+  border-radius: 8rpx;
+}
+
+.tag-add {
+  flex-shrink: 0;
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+  color: #ffffff;
+  background: var(--color-primary);
+  border-radius: 8rpx;
+}
+
+.tag-tip {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--color-text-light);
+}

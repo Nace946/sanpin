@@ -1,0 +1,70 @@
+<!-- packageAdmin/banners/banners.wxml -->
+<view class="page">
+
+  <view wx:if="{{checking}}" class="tip-wrap">正在校验身份…</view>
+
+  <view wx:elif="{{!authed}}" class="tip-wrap">
+    <view class="deny-title">无管理权限</view>
+    <view class="deny-desc">轮播图管理仅限平台运营人员使用。</view>
+    <view wx:if="{{openid}}" class="openid-box">
+      <view class="openid-label">当前微信账号的 openid（加入云函数环境变量 ADMIN_OPENIDS 后重新部署即可获得权限）：</view>
+      <view class="openid-value">{{openid}}</view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="intro">
+      按下面的顺序在首页从上到下播放，最多 20 张；全部停用时首页轮播位自动隐藏。
+      图片建议 750×500 以上、比例接近 3:2，避免文字被裁切。
+    </view>
+
+    <view wx:if="{{loading}}" class="tip-wrap">加载中…</view>
+
+    <view wx:elif="{{list.length === 0}}" class="tip-wrap">
+      <view class="deny-title">还没有轮播图</view>
+      <view class="deny-desc">点下方「＋ 上传轮播图」添加第一张。</view>
+    </view>
+
+    <view wx:else class="list">
+      <view class="card" wx:for="{{list}}" wx:key="_id">
+        <image
+          class="thumb"
+          src="{{item.image}}"
+          mode="aspectFill"
+          data-index="{{index}}"
+          bindtap="onPreview"
+        />
+
+        <view class="body">
+          <view class="row">
+            <text class="order">第 {{index + 1}} 张</text>
+            <text class="state {{item.enabled ? 'state-on' : ''}}">{{item.enabled ? '启用中' : '已停用'}}</text>
+          </view>
+
+          <picker
+            range="{{linkLabels}}"
+            value="{{item.linkIndex}}"
+            data-index="{{index}}"
+            bindchange="onLinkChange"
+          >
+            <view class="picker-value">{{linkLabels[item.linkIndex]}}</view>
+          </picker>
+
+          <view class="ops">
+            <view class="op" data-index="{{index}}" data-dir="-1" bindtap="onMove">↑ 上移</view>
+            <view class="op" data-index="{{index}}" data-dir="1" bindtap="onMove">↓ 下移</view>
+            <view class="op" data-index="{{index}}" bindtap="onToggle">{{item.enabled ? '停用' : '启用'}}</view>
+            <view class="op op-danger" data-index="{{index}}" bindtap="onRemove">删除</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="submit-bar">
+      <button class="submit-btn" bindtap="onAdd" loading="{{busy}}" disabled="{{busy}}">
+        {{busy ? '上传中…' : '＋ 上传轮播图'}}
+      </button>
+    </view>
+  </block>
+
+</view>

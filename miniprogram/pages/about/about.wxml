@@ -1,0 +1,98 @@
+<!-- pages/about/about.wxml -->
+<view class="page">
+
+  <view class="card">
+      <view class="app-name">{{appName}}</view>
+      <view class="app-slogan">{{slogan}}</view>
+    </view>
+
+    <!-- 联系客服：唯一联系入口，发布信息 / 纠错 / 举报都走客服微信 -->
+    <view class="card">
+      <view class="block-title">联系客服</view>
+      <view class="para">
+        本平台<text class="strong">不开放自助注册与自助发布</text>，所有信息由运营方核实后统一发布。
+      </view>
+      <view class="para">
+        如需<text class="strong">发布信息</text>（房源、闲置物品、生活信息，含失物招领），或发现信息有误、过期、虚假侵权，请添加下方客服微信沟通。
+      </view>
+
+      <view class="cs-item" bindtap="onCopyWechat">
+        <view class="cs-info">
+          <text class="cs-label">客服微信</text>
+          <text class="cs-value">{{contact.wechat || '暂未配置'}}</text>
+        </view>
+        <view class="cs-btn cs-btn-primary">复制</view>
+      </view>
+
+      <view class="cs-time">服务时间：{{contact.workTime || '以客服回复为准'}}</view>
+      <view class="cs-note">
+        提示：本平台不通过客服索要押金、保证金、验证码。
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">平台性质</view>
+      <view class="para">
+        本小程序为<text class="strong">信息展示类应用</text>，所有信息由平台运营方统一整理、审核后发布，普通用户仅可浏览查看，不具备发布、评论、交易功能。
+      </view>
+      <view class="para">
+        本平台<text class="strong">不提供在线交易、在线支付、订单撮合、资金结算</text>服务，不参与用户与信息提供方之间的任何交易过程。
+      </view>
+      <view class="para">
+        本平台<text class="strong">不从事房地产经纪业务</text>，不提供带看、议价、代签合同、代办过户等服务，不收取任何中介费用。
+      </view>
+      <view class="para">
+        本平台<text class="strong">不提供职业中介、招聘求职服务</text>，不收集简历，不开展人力资源服务。
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">信息来源与真实性</view>
+      <view class="para">
+        信息主要来源于商家或当事人提供、公开渠道整理。平台会尽合理努力核对信息来源，但<text class="strong">不对信息的真实性、准确性、时效性作出保证</text>。
+      </view>
+      <view class="para">
+        请用户在与信息提供方联系、交易前自行核实对方身份、房屋权属、物品状况、活动规则等关键信息。
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">风险提示</view>
+      <view class="para">1. 任何要求提前支付定金、押金、看房费、介绍费的行为，请高度警惕，谨防诈骗。</view>
+      <view class="para">2. 二手物品交易建议当面验货、当面交易。</view>
+      <view class="para">3. 生活信息中涉及商家活动、服务的内容，以商家门店实际公示为准，如调整、结束，以商家解释为准。</view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">举报与侵权处理</view>
+      <view class="para">
+        如您发现信息存在虚假、过期、违法违规，或认为内容侵犯您的合法权益（包括名誉权、著作权、隐私权等），请通过上方客服微信联系我们，并提供信息标题与具体问题。
+      </view>
+      <view class="para small">我们一般在 3 个工作日内核实处理，处理方式包括更正、补充说明或下架删除。</view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">隐私说明</view>
+      <view class="para">
+        本小程序<text class="strong">不收集您的个人信息</text>：不获取手机号、不获取位置、不读取通讯录、不强制登录，浏览无需注册。
+      </view>
+      <view class="para">
+        页面展示的联系电话为信息提供方同意公开的联络方式，仅用于本次信息对接。
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">免责声明</view>
+      <view class="para">
+        用户基于本平台信息作出的任何决策与行为，由用户自行承担相应后果。因信息提供方的原因或用户自身原因造成的损失，本平台在法律允许范围内不承担责任。
+      </view>
+      <view class="para">
+        本平台将根据法律法规及平台规则的变化，适时调整信息内容与展示方式。
+      </view>
+    </view>
+
+    <view class="footer">
+      <view>版本 {{version}}</view>
+    </view>
+
+</view>

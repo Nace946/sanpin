@@ -1,0 +1,59 @@
+/* custom-tab-bar/index.wxss */
+/* 复刻原生 tabBar 的观感（白底、1rpx 顶边、50px 高），中间多一个「联系客服」 */
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: #ffffff;
+  border-top: 1rpx solid #ebedf0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabbar-inner {
+  display: flex;
+  align-items: stretch;
+  height: 100rpx;
+}
+
+.tabbar-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+  color: #8f959e;
+  background: transparent;
+}
+
+.tabbar-text {
+  font-size: 26rpx;
+  line-height: 1;
+}
+
+.tabbar-item-on .tabbar-text {
+  color: #2b6ef2;
+  font-weight: 600;
+}
+
+/* 中间项：与普通 tab 同字号，不做高亮，避免抢视觉；按下给一点反馈 */
+.tabbar-service {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  line-height: normal;
+  background: transparent;
+}
+
+/* button 自带的 1px 边框要清掉，否则中间会多出一圈 */
+.tabbar-service::after {
+  border: none;
+}
+
+.tabbar-service .tabbar-text {
+  color: #3a4150;
+}

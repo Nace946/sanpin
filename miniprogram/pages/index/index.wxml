@@ -1,0 +1,104 @@
+<!-- pages/index/index.wxml -->
+<!-- 强制刷新藏在底部导航「首页」的长按里（见 custom-tab-bar），页面本身不响应长按 -->
+<view class="page">
+
+  <!-- 沉浸式头部：渐变铺满顶部，页面从屏幕顶部绘制（navigationStyle: custom） -->
+  <view class="top" style="padding-top:{{statusBarHeight}}px">
+    <view class="brand">
+      <!-- 隐藏管理入口：长按品牌名进管理后台（系统默认长按时长） -->
+      <view class="brand-name" bindlongpress="enterAdmin">三品信息</view>
+      <view class="brand-sub">房源 · 闲置 · 生活信息 ｜ 信息由平台统一发布</view>
+    </view>
+  </view>
+
+  <!-- 白色面板：分类入口 + 轮播图，上移压住渐变色带 -->
+  <view class="sheet">
+
+    <view class="category-grid">
+      <view
+        class="category-card cat-{{item.key}}"
+        wx:for="{{categories}}"
+        wx:key="key"
+        data-type="{{item.key}}"
+        bindtap="onCategoryTap"
+      >
+        <view class="category-icon icon-{{item.key}}"></view>
+        <view class="category-name">{{item.label}}</view>
+        <view class="category-desc">{{item.desc}}</view>
+      </view>
+    </view>
+
+    <!-- 公告栏：原轮播图位置暂时替换；管理员后台维护，无公告时整块不渲染 -->
+    <view wx:if="{{notices.length}}" class="notice" bindtap="onNoticeTap">
+      <view class="notice-badge">公告</view>
+      <view class="notice-track">
+        <view
+          class="notice-text"
+          style="animation-name:{{noticeAnim}};animation-duration:{{noticeDuration}}ms"
+          bindanimationend="onNoticeEnd"
+        >{{noticeText}}</view>
+      </view>
+    </view>
+
+  </view>
+
+  <view class="section-head">
+    <view class="section-bar"></view>
+    <text class="section-title">置顶信息</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-wrap">加载中…</view>
+
+  <view wx:elif="{{list.length === 0}}" class="empty-wrap">
+    <view>暂无置顶信息</view>
+    <view class="empty-tip">可点击上方分类查看全部信息</view>
+  </view>
+
+  <view wx:else class="cards">
+    <view
+      class="item {{item.cover ? 'item-with-cover' : ''}}"
+      wx:for="{{list}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="onItemTap"
+    >
+      <image
+        wx:if="{{item.cover}}"
+        class="item-cover"
+        src="{{item.cover}}"
+        mode="aspectFill"
+        lazy-load
+      />
+
+      <view class="item-body">
+        <!-- 标题固定预留两行高度，短标题也占两行，卡片高度才整齐 -->
+        <view class="item-title ellipsis-2">{{item.title}}</view>
+
+        <view class="item-meta">
+          <block wx:for="{{item.areaParts}}" wx:for-item="part" wx:key="*this">
+            <text wx:if="{{index > 0}}" class="meta-divider">|</text>
+            <text class="meta-part">{{part}}</text>
+          </block>
+        </view>
+
+        <view wx:if="{{item.priceValue || item.priceUnit}}" class="item-price">
+          <text class="price-num">{{item.priceValue || '面议'}}</text>
+          <text wx:if="{{item.priceUnit}}" class="price-unit">{{item.priceUnit}}</text>
+        </view>
+
+        <view class="item-tags">
+          <text wx:if="{{item.noAgency}}" class="tag tag-agency">无中介</text>
+          <text class="tag">{{item.tagText}}</text>
+          <text class="tag tag-custom" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          <text wx:if="{{item.isAd}}" class="tag tag-ad">广告</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="disclaimer">
+    本平台仅提供本地信息展示，由运营方统一整理发布，不提供在线交易、支付、撮合服务。
+    信息真实性请自行核实，据此交易产生的一切后果由当事人自行承担。
+  </view>
+
+</view>

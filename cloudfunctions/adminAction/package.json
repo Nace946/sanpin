@@ -1,0 +1,9 @@
+{
+  "name": "adminAction",
+  "version": "1.0.0",
+  "description": "管理员身份校验与信息发布",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

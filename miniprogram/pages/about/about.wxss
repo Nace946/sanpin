@@ -1,0 +1,146 @@
+/* pages/about/about.wxss */
+
+.page {
+  min-height: 100vh;
+  /* 底部留白 = 自定义 tabBar 高度 + iOS 安全区（tabBar 是 fixed 悬浮层） */
+  padding: 20rpx 0 calc(140rpx + env(safe-area-inset-bottom));
+}
+
+.card {
+  background: #ffffff;
+  border-radius: var(--radius);
+  padding: 32rpx;
+  margin: 0 var(--gap) 16rpx;
+}
+
+.app-name {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.app-slogan {
+  margin-top: 12rpx;
+  font-size: 25rpx;
+  line-height: 1.6;
+  color: var(--color-text-light);
+}
+
+.block-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 20rpx;
+  padding-left: 16rpx;
+  border-left: 6rpx solid var(--color-primary);
+  line-height: 1.2;
+}
+
+.para {
+  font-size: 26rpx;
+  line-height: 1.85;
+  color: var(--color-text-sub);
+  margin-bottom: 16rpx;
+}
+
+.para:last-child {
+  margin-bottom: 0;
+}
+
+.para.small {
+  font-size: 23rpx;
+  color: var(--color-text-light);
+  margin-top: 16rpx;
+}
+
+.strong {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 24rpx;
+  margin-top: 14rpx;
+  background: var(--color-bg);
+  border-radius: 12rpx;
+}
+
+.contact-label {
+  font-size: 26rpx;
+  color: var(--color-text-light);
+}
+
+.contact-value {
+  font-size: 26rpx;
+  color: var(--color-primary);
+}
+
+.footer {
+  padding: 40rpx 0;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--color-text-light);
+}
+
+/* 联系客服 */
+.cs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 24rpx;
+  margin-top: 14rpx;
+  background: var(--color-bg);
+  border-radius: 12rpx;
+}
+
+.cs-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cs-label {
+  font-size: 23rpx;
+  color: var(--color-text-light);
+}
+
+.cs-value {
+  margin-top: 6rpx;
+  font-size: 28rpx;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.cs-btn {
+  flex-shrink: 0;
+  margin-left: 20rpx;
+  padding: 10rpx 28rpx;
+  font-size: 24rpx;
+  color: var(--color-primary);
+  border: 1rpx solid var(--color-primary);
+  border-radius: 999rpx;
+}
+
+.cs-btn-primary {
+  color: #ffffff;
+  background: var(--color-primary);
+}
+
+.cs-time {
+  margin-top: 22rpx;
+  font-size: 24rpx;
+  color: var(--color-text-sub);
+}
+
+.cs-note {
+  margin-top: 14rpx;
+  padding: 18rpx 20rpx;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: #a25b00;
+  background: #fff7e6;
+  border-radius: 12rpx;
+}

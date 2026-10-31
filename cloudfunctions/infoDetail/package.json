@@ -1,0 +1,9 @@
+{
+  "name": "infoDetail",
+  "version": "1.0.0",
+  "description": "信息详情查询",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
