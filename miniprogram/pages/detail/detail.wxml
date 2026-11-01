@@ -102,6 +102,19 @@
       免责声明与举报方式 ›
     </view>
 
+    <!-- 底部固定操作栏。分享必须是 button + open-type="share" 才能直接唤起转发面板，
+         view 上的 bindtap 只能 guide 到右上角菜单。
+         左侧始终保留返回入口：正常从列表进来时它等价于「上一页」，
+         分享卡片直达、栈里没有上一页时它就是回到分类列表的唯一显式入口 -->
+    <view class="action-bar">
+      <view class="action-item">
+        <view class="action-btn action-ghost" hover-class="action-btn-hover" bindtap="onBackToList">{{backText}}</view>
+      </view>
+      <view class="action-item">
+        <button class="action-btn action-primary" open-type="share" hover-class="action-btn-hover">分享给朋友</button>
+      </view>
+    </view>
+
   </block>
 
 </view>

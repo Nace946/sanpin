@@ -31,7 +31,7 @@
         <input class="input" type="number" value="{{weight}}" bindinput="onWeightInput" placeholder="0" />
       </view>
 
-      <view class="weight-tip">权重越大排序越靠前，普通信息填 0，置顶可填 100</view>
+      <view class="weight-tip">权重只影响首页「信息推荐」位的排序（排序分 = 浏览量×1% + 权重，权重差 1 相当于 100 次浏览）。普通信息填 0（不进推荐位），推荐位填 100。列表页始终按发布时间倒序，不受权重影响。</view>
 
       <!-- 房源 -->
       <block wx:if="{{type === 'house'}}">
@@ -185,13 +185,13 @@
       </view>
 
       <view class="form-item col">
-        <text class="label">标签（选填，最多 3 个，每个 6 字内）</text>
+        <text class="label">标签（选填，最多 6 个，每个 6 字内）</text>
         <view class="tag-edit">
           <view class="tag-chip" wx:for="{{tags}}" wx:key="*this">
             <text>{{item}}</text>
             <text class="tag-del" data-index="{{index}}" bindtap="onTagDelete">✕</text>
           </view>
-          <block wx:if="{{tags.length < 3}}">
+          <block wx:if="{{tags.length < 6}}">
             <input
               class="tag-input"
               value="{{tagInput}}"

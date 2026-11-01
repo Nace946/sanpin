@@ -37,8 +37,31 @@ const SIMPLE_INDUSTRIES = ['friend', 'missing', 'travel', 'nearby', 'other']
 
 // 轮播图集合（前台公开读取，仅管理员可写）
 const BANNER_COLLECTION = 'banners'
-// 轮播图跳转类型：none=不跳转 / list=跳分类列表（房源、二手、优惠）
-const VALID_LINK_TYPES = ['none', 'list']
+// 轮播图跳转类型：none=不跳转（点击放大） / list=跳分类列表 / page=跳站内页面（存路径）
+const VALID_LINK_TYPES = ['none', 'list', 'page']
+
+/**
+ * 站内跳转允许的目标页面白名单。
+ *
+ * 必须白名单而不是「以 /pages/ 开头就放行」：轮播图路径由管理员手填，
+ * 一旦允许任意路径，填错一个字符就是白屏，填了不存在的页面用户点了没反应，
+ * 而这里能拦住的成本几乎为零。
+ */
+const PAGE_PATH_WHITELIST = ['/pages/detail/detail', '/pages/list/list', '/pages/about/about']
+// 站内路径总长度上限（含 query，够放一个 32 位 id）
+const PAGE_PATH_MAX = 300
+
+/** 校验并规范化站内路径：只允许白名单页面 + 可选 query */
+function normalizePagePath(input) {
+  const raw = str(input).trim()
+  if (!raw || raw.length > PAGE_PATH_MAX) return ''
+  if (!/^\/[A-Za-z0-9\-_/?=&%.]*$/.test(raw)) return ''
+
+  const path = raw.split('?')[0]
+  if (PAGE_PATH_WHITELIST.indexOf(path) === -1) return ''
+
+  return raw
+}
 
 // 公告集合（首页公告栏，前台公开读取，仅管理员可写）
 const NOTICE_COLLECTION = 'notices'
@@ -91,6 +114,13 @@ exports.main = async (event = {}) => {
   // 公告：前台公开读取（只返回启用中的），管理员可带 all:true 看全部
   if (action === 'noticeList') {
     return await noticeList(event, isAdmin, OPENID)
+  }
+
+  // 首页首屏元数据：公告 + 轮播图合并成一次请求
+  // 首页原先分两次调 noticeList / bannerList，合并后这两块只花 1 次调用，
+  // 首页首屏总调用次数不变（本接口 1 次 + 推荐列表 1 次）
+  if (action === 'homeMeta') {
+    return await homeMeta()
   }
 
   if (!isAdmin) {
@@ -242,7 +272,7 @@ function buildPayload(event) {
   }
 }
 
-/** 自定义标签：最多 3 个，每个 6 字内，去重、去掉分隔符与控制字符 */
+/** 自定义标签：最多 6 个，每个 6 字内，去重、去掉分隔符与控制字符 */
 function sanitizeTags(input) {
   if (!Array.isArray(input)) return []
 
@@ -258,7 +288,7 @@ function sanitizeTags(input) {
     if (out.indexOf(text) === -1) out.push(text)
   })
 
-  return out.slice(0, 3)
+  return out.slice(0, 6)
 }
 
 /* ---------------- 查询 ---------------- */
@@ -496,6 +526,8 @@ async function readBanners(all) {
       image: b.image || '',
       linkType: VALID_LINK_TYPES.includes(b.linkType) ? b.linkType : 'none',
       linkId: b.linkId || '',
+      // 站内页面跳转的目标路径，如 /pages/detail/detail?id=xxx
+      linkValue: b.linkValue || '',
       sort: Number(b.sort) || 0,
       enabled: b.enabled !== false
     }))
@@ -539,6 +571,29 @@ async function bannerList(event, isAdmin, openid) {
   }
 }
 
+/**
+ * 首页首屏元数据：公告 + 轮播图，一次返回
+ *
+ * 为什么合并：首页要同时展示这两块，分开调用就是 2 次云函数调用。
+ * 合并成 1 次后，首页首屏 = 本接口 1 次 + 推荐列表 1 次，次数没有增加。
+ *
+ * 两块各自 try/catch 降级：轮播图集合读失败不能把公告也一起带崩。
+ */
+async function homeMeta() {
+  const [banners, notices] = await Promise.all([
+    readBanners(false).catch(err => {
+      console.error('[adminAction] homeMeta 读取轮播图失败', err)
+      return []
+    }),
+    readNotices(false).catch(err => {
+      console.error('[adminAction] homeMeta 读取公告失败', err)
+      return []
+    })
+  ])
+
+  return { code: 0, banners, notices }
+}
+
 /** 新增或更新一张轮播图 */
 async function bannerSave(event) {
   const image = str(event.image)
@@ -547,16 +602,22 @@ async function bannerSave(event) {
   }
 
   const linkType = VALID_LINK_TYPES.includes(event.linkType) ? event.linkType : 'none'
-  const linkId = linkType === 'none' ? '' : str(event.linkId).slice(0, 32)
+  const linkId = linkType === 'list' ? str(event.linkId).slice(0, 32) : ''
+  const linkValue = linkType === 'page' ? normalizePagePath(event.linkValue) : ''
 
   if (linkType === 'list' && !VALID_TYPES.includes(linkId)) {
     return { code: 400, msg: '请选择跳转的分类' }
+  }
+
+  if (linkType === 'page' && !linkValue) {
+    return { code: 400, msg: '站内路径不合法，需形如 /pages/detail/detail?id=xxx' }
   }
 
   const data = {
     image,
     linkType,
     linkId,
+    linkValue,
     sort: Math.max(0, Math.min(999, parseInt(event.sort, 10) || 0)),
     enabled: event.enabled !== false,
     updatedAt: db.serverDate()

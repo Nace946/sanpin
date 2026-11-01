@@ -1,9 +1,9 @@
 // packageAdmin/utils/bannerQuery.js
-// 首页轮播图查询：走 adminAction 的公开 action（bannerList），带 1 小时缓存
+// 【已废弃】单独拉轮播图的查询封装：走 adminAction 的公开 action（bannerList），带 1 小时缓存
 //
-// 现状（2026-10-28）：首页轮播位已暂时换成公告栏，本文件因此暂时无人调用。
-// 为了不让「主包内存在未使用文件」的代码质量告警复现，暂放到分包内。
-// 将来恢复轮播图时：把本文件移回 miniprogram/utils/，并把 require 路径改回 '../../utils/bannerQuery'。
+// 现状（2026-11-02）：首页已重新接入轮播图，但不是单独请求，而是与公告合并成
+// 一次 adminAction.homeMeta（见 miniprogram/utils/homeMeta.js）。
+// 因此本文件不再被任何页面调用，仅作历史参考保留在分包内，不占主包体积。
 //
 // 注意：
 //   1. bannerList 是公开读取，非管理员也能拿到「启用中」的图，停用的不会被返回

@@ -94,7 +94,9 @@ Page({
         )) || {}
 
       if (ret.code === 0) {
+        // 首页走 homeMeta 合并缓存，改完公告要把这块一起清掉
         cloud.clearCache('notices:')
+        cloud.clearCache('home:')
         this.applyList(ret.list)
         wx.showToast({ title: '已添加', icon: 'success' })
       } else {
@@ -145,6 +147,7 @@ Page({
       const res = (await cloud.callFunction('adminAction', payload, { force: true })) || {}
       if (res.code === 0) {
         cloud.clearCache('notices:')
+        cloud.clearCache('home:')
         this.applyList(res.list)
         return true
       }
@@ -209,6 +212,7 @@ Page({
 
           if (ret.code === 0) {
             cloud.clearCache('notices:')
+            cloud.clearCache('home:')
             this.applyList(ret.list)
             wx.showToast({ title: '已删除', icon: 'success' })
           } else {

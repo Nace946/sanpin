@@ -51,38 +51,73 @@
   margin: 24rpx var(--gap) 0;
   padding: 20rpx 24rpx;
   font-size: 24rpx;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--color-text-sub);
   background: #ffffff;
   border-radius: 12rpx;
+}
+
+.intro-em {
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 .list {
   padding: 20rpx var(--gap) 0;
 }
 
+/* 改为上下布局：图片占满卡片宽度，看得清才配得准 */
 .card {
-  display: flex;
-  gap: 20rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
   padding: 20rpx;
   background: #ffffff;
   border-radius: var(--radius);
 }
 
+/* 图片外框：白底 + 细描边，让图和卡片背景分出一层 */
+.thumb-wrap {
+  padding: 8rpx;
+  background: #ffffff;
+  border: 1rpx solid var(--color-border);
+  border-radius: 16rpx;
+}
+
+.thumb-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12rpx;
+}
+
 .thumb {
-  flex-shrink: 0;
-  width: 240rpx;
-  height: 150rpx;
-  border-radius: 10rpx;
+  display: block;
+  width: 100%;
+  height: 320rpx;
   background: #eef0f3;
 }
 
+/* 左下角角标：一眼看出这张图点下去是放大还是跳转 */
+.hit-badge {
+  position: absolute;
+  left: 16rpx;
+  bottom: 16rpx;
+  max-width: 76%;
+  padding: 4rpx 16rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: #ffffff;
+  background: rgba(22, 28, 42, 0.58);
+  border-radius: 24rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hit-badge-jump {
+  background: rgba(43, 110, 242, 0.86);
+}
+
 .body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+  padding-top: 20rpx;
 }
 
 .row {
@@ -92,7 +127,7 @@
 }
 
 .order {
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 500;
   color: var(--color-text);
 }
@@ -110,20 +145,80 @@
   background: var(--color-primary-light);
 }
 
+/* 点击行为选择行 */
 .picker-value {
-  margin-top: 12rpx;
-  padding: 10rpx 18rpx;
-  font-size: 24rpx;
-  color: var(--color-text-sub);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  padding: 16rpx 20rpx;
   background: var(--color-bg);
   border-radius: 10rpx;
+}
+
+.picker-label {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: var(--color-text-light);
+}
+
+.picker-current {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--color-text-sub);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.picker-arrow {
+  flex-shrink: 0;
+  font-size: 28rpx;
+  line-height: 1;
+  color: #c2c8d4;
+}
+
+/* 站内路径行 */
+.path-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 12rpx;
+  padding: 12rpx 16rpx;
+  background: #f7f9fc;
+  border-radius: 10rpx;
+}
+
+.path-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 22rpx;
+  color: var(--color-text-sub);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.path-empty {
+  color: #b6bcc9;
+}
+
+.path-edit {
+  flex-shrink: 0;
+  padding: 2rpx 14rpx;
+  font-size: 22rpx;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-radius: 20rpx;
 }
 
 .ops {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
-  margin-top: 14rpx;
+  margin-top: 16rpx;
 }
 
 .op {
@@ -161,4 +256,84 @@
 
 .submit-btn[disabled] {
   opacity: 0.6;
+}
+
+/* ---------------- 站内路径编辑弹窗 ---------------- */
+
+.mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 20, 30, 0.45);
+}
+
+.dialog {
+  width: 600rpx;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 20rpx;
+}
+
+.dialog-title {
+  padding: 36rpx 32rpx 12rpx;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dialog-body {
+  padding: 8rpx 32rpx 28rpx;
+}
+
+.dialog-input {
+  width: 100%;
+  height: 84rpx;
+  padding: 0 20rpx;
+  font-size: 26rpx;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border-radius: 10rpx;
+  box-sizing: border-box;
+}
+
+.dialog-ph {
+  font-size: 24rpx;
+  color: #b6bcc9;
+}
+
+.dialog-tip {
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: var(--color-text-light);
+}
+
+.dialog-ops {
+  display: flex;
+  border-top: 1rpx solid var(--color-border);
+}
+
+.d-btn {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--color-text-sub);
+}
+
+.d-btn + .d-btn {
+  border-left: 1rpx solid var(--color-border);
+}
+
+.d-primary {
+  font-weight: 600;
+  color: var(--color-primary);
 }

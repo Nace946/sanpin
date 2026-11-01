@@ -1,17 +1,26 @@
 // packageAdmin/banners/banners.js
-// 首页轮播图管理：上传 / 启停 / 排序 / 跳转配置 / 删除
+// 首页轮播图管理：上传 / 启停 / 排序 / 点击行为配置 / 删除
 //
 // 数据落在 banners 集合，读写都走 adminAction：
 //   bannerList（公开读取，管理端带 all:true 看全部）
 //   bannerSave / bannerRemove（需管理员）
+//
+// 点击行为（linkType）三种：
+//   none → 前台点击放大预览
+//   list → 跳分类列表（linkId 存 house / secondhand / offer）
+//   page → 跳站内页面（linkValue 存 /pages/xxx 路径，由管理台「复制路径」得到）
 const cloud = require('../../utils/cloud')
 
 const LINK_OPTIONS = [
-  { key: 'none', label: '不跳转' },
-  { key: 'house', label: '跳转到「房源租售」' },
-  { key: 'secondhand', label: '跳转到「二手闲置」' },
-  { key: 'offer', label: '跳转到「生活信息」' }
+  { key: 'none', label: '不跳转（点击放大）', hit: '点击可放大' },
+  { key: 'house', label: '跳转到「房源租售」', hit: '点击跳转 · 房源' },
+  { key: 'secondhand', label: '跳转到「二手闲置」', hit: '点击跳转 · 二手' },
+  { key: 'offer', label: '跳转到「生活信息」', hit: '点击跳转 · 生活' },
+  { key: 'page', label: '站内页面（粘贴路径）', hit: '点击跳转 · 站内页面' }
 ]
+
+// 站内路径格式：与云函数 normalizePagePath 的前端侧保持一致的宽松校验
+const PAGE_PATH_RE = /^\/pages\/[A-Za-z0-9\-_/]+(\?[A-Za-z0-9\-_=&%.]*)?$/
 
 Page({
   data: {
@@ -21,7 +30,13 @@ Page({
     loading: true,
     busy: false,
     list: [],
-    linkLabels: LINK_OPTIONS.map(o => o.label)
+    linkLabels: LINK_OPTIONS.map(o => o.label),
+
+    // 站内路径编辑弹窗
+    editShow: false,
+    editIndex: 0,
+    editValue: '',
+    editTip: ''
   },
 
   onLoad() {
@@ -58,15 +73,27 @@ Page({
     }
   },
 
-  /** 把 linkType/linkId 映射成 picker 的下标 */
+  /** 把 linkType/link 映射成 picker 下标 + 卡片上要显示的角标文案 */
   decorate(rawList) {
     return (rawList || []).map(item => {
       let linkIndex = 0
       if (item.linkType === 'list') {
         const i = LINK_OPTIONS.findIndex(o => o.key === item.linkId)
         linkIndex = i > 0 ? i : 0
+      } else if (item.linkType === 'page') {
+        const i = LINK_OPTIONS.findIndex(o => o.key === 'page')
+        linkIndex = i > 0 ? i : 0
       }
-      return Object.assign({}, item, { linkIndex })
+
+      const opt = LINK_OPTIONS[linkIndex] || LINK_OPTIONS[0]
+      const jumping = item.linkType === 'list' || item.linkType === 'page'
+
+      return Object.assign({}, item, {
+        linkIndex,
+        // 角标：一眼看出这张图点下去是放大还是跳转
+        hitText: opt.hit,
+        jumping
+      })
     })
   },
 
@@ -110,6 +137,7 @@ Page({
             image: up.fileID,
             linkType: 'none',
             linkId: '',
+            linkValue: '',
             sort: this.data.list.length,
             enabled: true
           },
@@ -119,7 +147,9 @@ Page({
       wx.hideLoading()
 
       if (save.code === 0) {
+        // 首页走 homeMeta 合并缓存，改完轮播图要把这块一起清掉
         cloud.clearCache('banners:')
+        cloud.clearCache('home:')
         this.applyList(save.list)
         wx.showToast({ title: '已添加', icon: 'success' })
       } else {
@@ -142,7 +172,8 @@ Page({
         id: item._id,
         image: item.image,
         linkType: item.linkType,
-        linkId: item.linkId,
+        linkId: item.linkId || '',
+        linkValue: item.linkValue || '',
         sort: item.sort,
         enabled: item.enabled
       },
@@ -153,6 +184,7 @@ Page({
       const res = (await cloud.callFunction('adminAction', payload, { force: true })) || {}
       if (res.code === 0) {
         cloud.clearCache('banners:')
+        cloud.clearCache('home:')
         this.applyList(res.list)
         return true
       }
@@ -171,11 +203,90 @@ Page({
     const opt = LINK_OPTIONS[Number(e.detail.value)]
     if (!item || !opt) return
 
+    // 站内页面要先填路径，弹编辑框，确定后才真正写库
+    if (opt.key === 'page') {
+      this.openEdit(index)
+      return
+    }
+
     this.save(item, {
       linkType: opt.key === 'none' ? 'none' : 'list',
-      linkId: opt.key === 'none' ? '' : opt.key
+      linkId: opt.key === 'none' ? '' : opt.key,
+      linkValue: ''
     })
   },
+
+  /* ---------------- 站内路径编辑弹窗 ---------------- */
+
+  openEdit(index) {
+    const item = this.data.list[index]
+    if (!item) return
+    this.setData({
+      editShow: true,
+      editIndex: index,
+      editValue: item.linkValue || '',
+      editTip: '在「信息管理」里点某条信息的「复制路径」，回到这里点「粘贴」即可'
+    })
+  },
+
+  /** 已配好路径的卡片上直接点「改路径」 */
+  onEditPath(e) {
+    this.openEdit(Number(e.currentTarget.dataset.index))
+  },
+
+  onEditInput(e) {
+    this.setData({ editValue: e.detail.value, editTip: '' })
+  },
+
+  /** 读取剪贴板：从信息管理页复制过来的路径，一键粘进来 */
+  onEditPaste() {
+    wx.getClipboardData({
+      success: res => {
+        const v = String(res.data || '').trim()
+        if (!v) {
+          this.setData({ editTip: '剪贴板是空的' })
+          return
+        }
+        this.setData({ editValue: v, editTip: '已粘贴，确认无误后点「确定」' })
+      },
+      fail: () => {
+        this.setData({ editTip: '读取剪贴板失败，可长按输入框手动粘贴' })
+      }
+    })
+  },
+
+  onEditCancel() {
+    this.setData({ editShow: false })
+    // picker 已经切到「站内页面」但没写库，重绘一次让显示回到真实值
+    this.setData({ list: this.decorate(this.data.list) })
+  },
+
+  async onEditConfirm() {
+    const raw = String(this.data.editValue || '').trim()
+
+    if (!raw) {
+      this.setData({ editTip: '请填写路径，或点「粘贴」从信息管理页取' })
+      return
+    }
+    if (!PAGE_PATH_RE.test(raw)) {
+      this.setData({ editTip: '路径需以 /pages/ 开头，例如 /pages/detail/detail?id=xxx' })
+      return
+    }
+
+    const item = this.data.list[this.data.editIndex]
+    if (!item) {
+      this.setData({ editShow: false })
+      return
+    }
+
+    this.setData({ editShow: false })
+    const ok = await this.save(item, { linkType: 'page', linkId: '', linkValue: raw })
+    if (!ok) wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+  },
+
+  onNoop() {},
+
+  /* ---------------- 其它操作 ---------------- */
 
   onToggle(e) {
     const item = this.data.list[Number(e.currentTarget.dataset.index)]
@@ -227,6 +338,7 @@ Page({
 
           if (ret.code === 0) {
             cloud.clearCache('banners:')
+            cloud.clearCache('home:')
             this.applyList(ret.list)
             wx.showToast({ title: '已删除', icon: 'success' })
           } else {
@@ -240,9 +352,28 @@ Page({
     })
   },
 
-  onPreview(e) {
+  /**
+   * 点图片：不跳转的图直接放大；设了跳转的图不放大，避免和真实点击行为不一致
+   * （想无条件看大图用操作区的「预览」）
+   */
+  onThumbTap(e) {
     const item = this.data.list[Number(e.currentTarget.dataset.index)]
     if (!item) return
-    wx.previewImage({ current: item.image, urls: [item.image] })
+
+    if (!item.jumping) {
+      this.preview(item)
+      return
+    }
+    wx.showToast({ title: '该图点击会跳转，不放大', icon: 'none' })
+  },
+
+  onPreview(e) {
+    const item = this.data.list[Number(e.currentTarget.dataset.index)]
+    if (item) this.preview(item)
+  },
+
+  preview(item) {
+    const urls = this.data.list.map(x => x.image).filter(Boolean)
+    wx.previewImage({ current: item.image, urls: urls.length ? urls : [item.image] })
   }
 })

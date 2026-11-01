@@ -15,7 +15,8 @@
   <block wx:else>
     <view class="intro">
       按下面的顺序在首页从上到下播放，最多 20 张；全部停用时首页轮播位自动隐藏。
-      图片建议 750×500 以上、比例接近 3:2，避免文字被裁切。
+      图片建议 750×380 左右（约 2:1）。<text class="intro-em">不跳转</text>的图用户点击可放大；
+      <text class="intro-em">设了跳转</text>的图点击直接跳走，不放大。
     </view>
 
     <view wx:if="{{loading}}" class="tip-wrap">加载中…</view>
@@ -27,13 +28,21 @@
 
     <view wx:else class="list">
       <view class="card" wx:for="{{list}}" wx:key="_id">
-        <image
-          class="thumb"
-          src="{{item.image}}"
-          mode="aspectFill"
-          data-index="{{index}}"
-          bindtap="onPreview"
-        />
+
+        <!-- 图片外框：白底 + 细描边，与卡片背景分层 -->
+        <view class="thumb-wrap">
+          <view class="thumb-box">
+            <image
+              class="thumb"
+              src="{{item.image}}"
+              mode="aspectFill"
+              data-index="{{index}}"
+              bindtap="onThumbTap"
+              lazy-load
+            />
+            <text class="hit-badge {{item.jumping ? 'hit-badge-jump' : ''}}">{{item.hitText}}</text>
+          </view>
+        </view>
 
         <view class="body">
           <view class="row">
@@ -47,14 +56,25 @@
             data-index="{{index}}"
             bindchange="onLinkChange"
           >
-            <view class="picker-value">{{linkLabels[item.linkIndex]}}</view>
+            <view class="picker-value">
+              <text class="picker-label">点击行为</text>
+              <text class="picker-current">{{linkLabels[item.linkIndex]}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
           </picker>
 
+          <!-- 站内页面：显示已配的路径，可再次修改 -->
+          <view wx:if="{{item.linkType === 'page'}}" class="path-row">
+            <text class="path-text {{item.linkValue ? '' : 'path-empty'}}">{{item.linkValue || '未填写路径，点右侧填写'}}</text>
+            <text class="path-edit" data-index="{{index}}" bindtap="onEditPath">改路径</text>
+          </view>
+
           <view class="ops">
-            <view class="op" data-index="{{index}}" data-dir="-1" bindtap="onMove">↑ 上移</view>
-            <view class="op" data-index="{{index}}" data-dir="1" bindtap="onMove">↓ 下移</view>
-            <view class="op" data-index="{{index}}" bindtap="onToggle">{{item.enabled ? '停用' : '启用'}}</view>
-            <view class="op op-danger" data-index="{{index}}" bindtap="onRemove">删除</view>
+            <text class="op" data-index="{{index}}" bindtap="onPreview">预览</text>
+            <text class="op" data-index="{{index}}" data-dir="-1" bindtap="onMove">↑ 上移</text>
+            <text class="op" data-index="{{index}}" data-dir="1" bindtap="onMove">↓ 下移</text>
+            <text class="op" data-index="{{index}}" bindtap="onToggle">{{item.enabled ? '停用' : '启用'}}</text>
+            <text class="op op-danger" data-index="{{index}}" bindtap="onRemove">删除</text>
           </view>
         </view>
       </view>
@@ -66,5 +86,27 @@
       </button>
     </view>
   </block>
+
+  <!-- 站内路径编辑弹窗 -->
+  <view wx:if="{{editShow}}" class="mask" bindtap="onEditCancel">
+    <view class="dialog" catchtap="onNoop">
+      <view class="dialog-title">站内跳转路径</view>
+      <view class="dialog-body">
+        <input
+          class="dialog-input"
+          value="{{editValue}}"
+          placeholder="/pages/detail/detail?id=xxx"
+          placeholder-class="dialog-ph"
+          bindinput="onEditInput"
+        />
+        <view class="dialog-tip">{{editTip}}</view>
+      </view>
+      <view class="dialog-ops">
+        <text class="d-btn" bindtap="onEditPaste">粘贴</text>
+        <text class="d-btn" bindtap="onEditCancel">取消</text>
+        <text class="d-btn d-primary" bindtap="onEditConfirm">确定</text>
+      </view>
+    </view>
+  </view>
 
 </view>

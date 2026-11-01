@@ -177,6 +177,22 @@ Page({
     })
   },
 
+  /**
+   * 复制该条信息的站内路径。
+   *
+   * 用途：轮播图要跳「某条具体信息」时，不用记 id，在这里复制一次，
+   * 到「轮播图管理」把点击行为选成「站内页面」→ 弹窗里点「粘贴」即可。
+   * 路径与 pages/detail/detail 的 onLoad 入参严格对应，改路由时两边要一起改。
+   */
+  onCopyPath(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.setClipboardData({
+      data: `/pages/detail/detail?id=${id}`,
+      success: () => wx.showToast({ title: '路径已复制，可粘贴到轮播图', icon: 'none' })
+    })
+  },
+
   /** 仅加载后续分页（第 2 页起），不再重复取统计 */
   async loadList(reset) {
     if (reset) return this.bootstrap()
@@ -272,13 +288,12 @@ Page({
     wx.navigateTo({ url: '/packageAdmin/publish/publish' })
   },
 
-  /** 轮播图管理：上传、启停、排序、跳转配置 */
-  /** 公告管理（首页公告栏，原轮播图位置暂时替换） */
+  /** 公告管理（首页公告栏） */
   onNotices() {
     wx.navigateTo({ url: '/packageAdmin/notices/notices' })
   },
 
-  /** 轮播图管理：首页轮播位暂时换成公告栏，入口已收起，页面仍保留可后续恢复 */
+  /** 轮播图管理：上传、启停、排序、跳转配置；展示在首页公告下方 */
   onBanners() {
     wx.navigateTo({ url: '/packageAdmin/banners/banners' })
   },
@@ -313,7 +328,8 @@ Page({
 
   async onTop(e) {
     const { id, weight } = e.currentTarget.dataset
-    // 首页只展示置顶（weight > 0），因此置顶做成「置顶 100 / 取消置顶 0」的开关
+    // 首页只展示推荐位（weight > 0），因此这里做成「推荐 100 / 取消推荐 0」的开关。
+    // 注意：weight 只影响首页「信息推荐」位的排序，列表页是按发布时间倒序的，加了推荐也不会在列表里置顶
     const current = Number(weight || 0)
     const nextWeight = current > 0 ? 0 : 100
     const isPin = nextWeight > 0
@@ -323,7 +339,7 @@ Page({
       const res = await cloud.callFunction('adminAction', { action: 'setWeight', id, weight: nextWeight }, { force: true })
       wx.hideLoading()
       if (res && res.code === 0) {
-        wx.showToast({ title: isPin ? '已置顶，首页可见' : '已取消置顶', icon: 'none' })
+        wx.showToast({ title: isPin ? '已加入推荐，首页可见' : '已移出推荐', icon: 'none' })
         this.patchWeight(id, nextWeight)
         cloud.clearCache('list:')
         cloud.clearCache('detail:')

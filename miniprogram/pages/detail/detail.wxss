@@ -3,7 +3,8 @@
 .page {
   min-height: 100vh;
   padding-top: 20rpx;
-  padding-bottom: 40rpx;
+  /* 给底部固定操作栏留出空间，否则最后一张卡片会被盖住 */
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 .expired-bar {
@@ -270,4 +271,79 @@
   color: var(--color-primary);
   background: var(--color-primary-light);
   border-radius: 36rpx;
+}
+
+/* 底部固定操作栏：白底 + 上边框，撑到安全区下沿 */
+.action-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  box-sizing: border-box;
+  padding: 12rpx 24rpx;
+  padding-bottom: calc(12rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  border-top: 1rpx solid var(--color-border);
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 外层控制等分宽度，按钮只负责填满这一格。
+   注意 button 不在 app.wxss 的 `view,text,image,scroll-view` 盒模型规则里，
+   默认是 content-box 且自带左右 padding，所以这里一律用 flex 分配 + 显式 border-box */
+.action-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.action-item + .action-item {
+  margin-left: 16rpx;
+}
+
+.action-btn {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  display: block;
+  height: 72rpx;
+  line-height: 72rpx;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  font-size: 27rpx;
+  border-radius: 36rpx;
+  /* 分类名较长时（如「返回房源租售列表」）不换行撑高按钮，极端情况才省略 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 微信 button 自带背景、边框、内边距和 ::after 描边，全部清掉再套自己的样式 */
+button.action-btn {
+  box-sizing: border-box;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  border: none;
+}
+
+button.action-btn::after {
+  border: none;
+}
+
+.action-primary {
+  color: #ffffff;
+  background: var(--color-primary);
+}
+
+.action-ghost {
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+}
+
+.action-btn-hover {
+  opacity: 0.85;
 }

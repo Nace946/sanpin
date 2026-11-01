@@ -120,7 +120,7 @@ Page({
     submitting: false,
     importTip: '',
 
-    // 自定义标签：最多 3 个、每个 6 字内，提交时存进 infos.tags
+    // 自定义标签：最多 6 个、每个 6 字内，提交时存进 infos.tags
     tags: [],
     tagInput: ''
   },
@@ -232,7 +232,7 @@ Page({
       isSimple: type === 'offer' && isSimpleIndustry(industryKey),
       lfIndex: Math.max(0, LF_OPTIONS.findIndex(o => o.key === ext.lfType)),
       weight: data.weight || 0,
-      tags: Array.isArray(data.tags) ? data.tags.slice(0, 3) : [],
+      tags: Array.isArray(data.tags) ? data.tags.slice(0, 6) : [],
       tagInput: '',
       form: {
         title: data.title || '',
@@ -402,7 +402,7 @@ Page({
     this.setData({ tagInput: e.detail.value })
   },
 
-  /** 添加标签：最多 3 个、每个 6 字，自动去掉空白与分隔符 */
+  /** 添加标签：最多 6 个、每个 6 字，自动去掉空白与分隔符 */
   onTagAdd() {
     const text = String(this.data.tagInput || '')
       .replace(/[\s\r\n\t#＃,，、|/]+/g, '')
@@ -411,8 +411,8 @@ Page({
     if (!text) return
 
     const tags = this.data.tags.slice()
-    if (tags.length >= 3) {
-      wx.showToast({ title: '最多添加 3 个标签', icon: 'none' })
+    if (tags.length >= 6) {
+      wx.showToast({ title: '最多添加 6 个标签', icon: 'none' })
       return
     }
     if (tags.indexOf(text) !== -1) {

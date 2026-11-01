@@ -34,7 +34,7 @@ exports.main = async (event = {}) => {
         title: d.title,
         summary: d.summary || '',
         content: d.content || '',
-        tags: Array.isArray(d.tags) ? d.tags.slice(0, 3) : [],
+        tags: Array.isArray(d.tags) ? d.tags.slice(0, 6) : [],
         images: d.images || [],
         contact: d.contact || {},
         ext: d.ext || {},

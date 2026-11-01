@@ -40,11 +40,12 @@
       </view>
     </view>
 
-    <!-- 操作条 -->
+    <!-- 操作条：四个按钮两行两列，单行四个会挤到换行 -->
     <view class="action-bar">
       <view class="act-btn act-primary" bindtap="onCreate">＋ 新建信息</view>
       <view class="act-btn act-ghost" bindtap="onImport">⇩ 一键导入</view>
       <view class="act-btn act-ghost" bindtap="onNotices">公告</view>
+      <view class="act-btn act-ghost" bindtap="onBanners">轮播图</view>
     </view>
 
     <!-- 手动兜底：定时任务每天 00:00 清理过期信息，触发器异常时可点右侧按钮立即补跑 -->
@@ -130,6 +131,9 @@
         <view class="m-ops">
           <view class="op" data-id="{{item._id}}" bindtap="onEdit">编辑</view>
 
+          <!-- 复制站内路径：粘到轮播图「站内页面」即可直达这条信息 -->
+          <view class="op" data-id="{{item._id}}" bindtap="onCopyPath">复制路径</view>
+
           <view
             wx:if="{{item.status === 'published'}}"
             class="op"
@@ -168,7 +172,7 @@
             data-id="{{item._id}}"
             data-weight="{{item.weight}}"
             bindtap="onTop"
-          >{{item.weight > 0 ? '取消置顶' : '置顶'}}</view>
+          >{{item.weight > 0 ? '取消推荐' : '推荐'}}</view>
 
           <view
             wx:if="{{item.status !== 'deleted'}}"

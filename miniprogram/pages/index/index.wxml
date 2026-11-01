@@ -28,7 +28,7 @@
       </view>
     </view>
 
-    <!-- 公告栏：原轮播图位置暂时替换；管理员后台维护，无公告时整块不渲染 -->
+    <!-- 公告栏：管理员后台维护，无公告时整块不渲染 -->
     <view wx:if="{{notices.length}}" class="notice" bindtap="onNoticeTap">
       <view class="notice-badge">公告</view>
       <view class="notice-track">
@@ -42,15 +42,40 @@
 
   </view>
 
+  <!-- 轮播图：独立于白色面板，直接铺在页面底色上；无启用中的图时整块不渲染 -->
+  <view wx:if="{{banners.length}}" class="banner-box">
+    <swiper
+      class="banner-swiper"
+      indicator-dots="{{banners.length > 1}}"
+      indicator-color="rgba(255,255,255,0.45)"
+      indicator-active-color="#ffffff"
+      autoplay="{{banners.length > 1}}"
+      interval="4000"
+      duration="400"
+      circular
+    >
+      <swiper-item wx:for="{{banners}}" wx:key="_id">
+        <image
+          class="banner-img"
+          src="{{item.image}}"
+          mode="aspectFill"
+          data-index="{{index}}"
+          bindtap="onBannerTap"
+          lazy-load
+        />
+      </swiper-item>
+    </swiper>
+  </view>
+
   <view class="section-head">
     <view class="section-bar"></view>
-    <text class="section-title">置顶信息</text>
+    <text class="section-title">信息推荐</text>
   </view>
 
   <view wx:if="{{loading}}" class="loading-wrap">加载中…</view>
 
   <view wx:elif="{{list.length === 0}}" class="empty-wrap">
-    <view>暂无置顶信息</view>
+    <view>暂无推荐信息</view>
     <view class="empty-tip">可点击上方分类查看全部信息</view>
   </view>
 

@@ -41,12 +41,25 @@ const LIST_CACHE_TTL = 60 * 60 * 1000
 const DETAIL_CACHE_TTL = 10 * 60 * 1000
 
 /**
- * BANNER_CACHE_TTL：首页轮播图缓存有效期（毫秒）
+ * BANNER_CACHE_TTL：轮播图单独请求时的缓存有效期（毫秒）
  *
- * 轮播图只在管理员后台改动，变化频率远低于信息列表，因此与列表同为 1 小时。
- * 改完轮播图后，管理端会清 banners: 前缀缓存，自己手机上立即生效。
+ * 注：首页现在走 homeMeta 一次拿「公告 + 轮播图」，实际生效的是下面的
+ * HOME_CACHE_MAX_TTL；本常量仅在需要单独拉轮播图的场景保留。
  */
 const BANNER_CACHE_TTL = 60 * 60 * 1000
+
+/**
+ * HOME_CACHE_MAX_TTL：首页「公告 + 轮播图」合并请求的缓存上限（毫秒）
+ *
+ * 首页首屏元数据走 adminAction 的 homeMeta，一次拿回公告与轮播图。
+ * 缓存有效期取「距下一个公告刷新点」与「本上限」中的较小值：
+ *   - 公告：沿用 NOTICE_REFRESH_HOURS（8:00 / 17:00）的节奏
+ *   - 轮播图：管理员改完后，别人手机上最多等这么久就生效
+ *
+ * 2 小时是折中：既不把公告刷成每小时一次（那会白花调用），
+ * 又不会让轮播图改完半天看不见。想让轮播图更快生效就调小。
+ */
+const HOME_CACHE_MAX_TTL = 2 * 60 * 60 * 1000
 
 /**
  * NOTICE_REFRESH_HOURS：首页公告的每日刷新时间点（24 小时制，升序）
@@ -102,6 +115,7 @@ module.exports = {
   LIST_CACHE_TTL,
   DETAIL_CACHE_TTL,
   BANNER_CACHE_TTL,
+  HOME_CACHE_MAX_TTL,
   NOTICE_REFRESH_HOURS,
   PERSIST_CACHE,
   SITE,

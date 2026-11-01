@@ -1,7 +1,7 @@
 // pages/index/index.js
 const util = require('../../utils/util')
 const infoQuery = require('../../utils/infoQuery')
-const noticeQuery = require('../../utils/noticeQuery')
+const homeMetaQuery = require('../../utils/homeMeta')
 
 Page({
   data: {
@@ -21,17 +21,56 @@ Page({
     noticeAnim: 'noticeA',
     noticeDuration: 8000,
 
+    // 轮播图：与公告同一次请求返回（utils/homeMeta.js），空数组时整块不渲染
+    banners: [],
+
     list: [],
     loading: true
   },
 
   onLoad() {
     this.initNavMetrics()
-    this.loadNotices()
+    this.loadHomeMeta()
     this.loadPinned()
   },
 
+  /**
+   * 分享卡片落地。
+   *
+   * 为什么落地页不是详情页：微信冷启动时，path 指向的那个页面会成为页面栈的栈底，
+   * 侧滑手势 = 页面栈 pop 一层，栈底再 pop 就只能关闭小程序。
+   * 所以分享路径写成「首页」，由首页补上列表、列表再补上详情，凑成三层：
+   *   详情 ←(侧滑) 列表 ←(侧滑) 首页 ←(侧滑) 退出小程序
+   * 每层都是真实页面，返回手势和左上角返回都能正常工作。
+   */
+  openSharedInfo(options) {
+    const id = options && options.open
+    if (!id) return
+
+    const type = options.type || 'all'
+    let url = `/pages/list/list?type=${type}&open=${id}`
+    if (options.tab) url += `&tab=${options.tab}`
+
+    wx.navigateTo({ url })
+  },
+
+  /**
+   * 消费 App.onShow 记下的分享参数。
+   * 只在这里跳、不在 onLoad 跳：冷启动时 onShow 紧随 onLoad，
+   * 两处都做会连续压两层列表页。统一由 onShow 处理，冷热启动行为一致。
+   */
+  consumeSharedInfo() {
+    const g = getApp().globalData || {}
+    const q = g.pendingOpen
+    if (!q) return
+    g.pendingOpen = null
+    this.openSharedInfo(q)
+  },
+
   onShow() {
+    // 先消费分享参数：下面几个分支都带 return，放最后会被跳过
+    this.consumeSharedInfo()
+
     // 自定义 tabBar：回到首页时把选中态切到「首页」（原生 tabBar 会自动做这件事）
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 0 })
@@ -45,9 +84,9 @@ Page({
       return
     }
 
-    // 返回首页时刷新一次；缓存未到刷新点（每日 8:00 / 17:00）时命中缓存，不产生云函数调用
+    // 返回首页时刷新一次；缓存未到刷新点（每日 8:00 / 17:00，或 2 小时上限）时命中缓存，不产生云函数调用
     if (this.ready) this.loadPinned()
-    if (this.noticeReady) this.loadNotices()
+    if (this.metaReady) this.loadHomeMeta()
   },
 
   /** 读取状态栏高度：自定义导航栏下页面从屏幕顶部开始绘制 */
@@ -62,11 +101,20 @@ Page({
     this.setData({ statusBarHeight })
   },
 
-  /** 公告：无公告或全部停用时返回空数组，页面整块隐藏 */
-  async loadNotices(options) {
+  /**
+   * 公告 + 轮播图：同一次请求返回，首页首屏只花 1 次调用
+   * 两者都是「无数据则整块不渲染」，不会留空白占位
+   */
+  async loadHomeMeta(options) {
     const opts = options || {}
-    const notices = await noticeQuery.fetchNotices({ force: !!opts.force })
-    this.noticeReady = true
+    const meta = await homeMetaQuery.fetchHomeMeta({ force: !!opts.force })
+    this.metaReady = true
+
+    const notices = meta.notices || []
+    const banners = meta.banners || []
+
+    // 轮播图跟着缓存一起更新，数量为 0 时 wx:if 直接不渲染
+    this.setData({ banners })
 
     if (!notices.length) {
       this.setData({ notices: [], noticeText: '' })
@@ -144,7 +192,7 @@ Page({
     })
   },
 
-  /** 首页只展示置顶信息（weight > 0），其余信息需进入对应分类列表查看 */
+  /** 首页只展示推荐信息（weight > 0），其余信息需进入对应分类列表查看 */
   async loadPinned(options) {
     const opts = options || {}
     if (!this.ready) this.setData({ loading: true })
@@ -183,7 +231,7 @@ Page({
     try {
       const results = await Promise.all([
         this.loadPinned({ force: true }),
-        this.loadNotices({ force: true })
+        this.loadHomeMeta({ force: true })
       ])
       // loadPinned 内部失败时已提示过，这里只补一个成功反馈
       if (results[0]) wx.showToast({ title: '已刷新', icon: 'none', duration: 800 })
@@ -200,6 +248,53 @@ Page({
   onItemTap(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: `/pages/detail/detail?id=${id}` })
+  },
+
+  /**
+   * 轮播图点击：只有配置了「跳转到分类」才响应，其余情况静默
+   * linkId 是信息大类（house / secondhand / offer），直接进对应分类列表
+   */
+  /**
+   * 轮播图点击：按管理台配的「点击行为」分三路
+   *   none → 放大预览（可左右滑看全部轮播图）
+   *   list → 跳对应大类列表
+   *   page → 跳站内页面，路径由管理台「复制路径」得到
+   * 前台不加任何提示，用户点下去才知道是哪种 —— 这是既定交互。
+   */
+  onBannerTap(e) {
+    const item = this.data.banners[Number(e.currentTarget.dataset.index)]
+    if (!item) return
+
+    if (!item.linkType || item.linkType === 'none') {
+      if (!item.image) return
+      wx.previewImage({
+        current: item.image,
+        urls: this.data.banners.map(b => b.image).filter(Boolean)
+      })
+      return
+    }
+
+    if (item.linkType === 'list' && item.linkId) {
+      wx.navigateTo({ url: `/pages/list/list?type=${item.linkId}` })
+      return
+    }
+
+    if (item.linkType === 'page' && item.linkValue) {
+      const path = String(item.linkValue)
+      // 服务端已校验过白名单，这里再挡一次，避免脏数据把用户带到不存在的页面
+      if (path.indexOf('/pages/') !== 0) return
+
+      // 「关于」是 tabBar 页，只能用 switchTab，navigateTo 会直接失败
+      if (path.split('?')[0] === '/pages/about/about') {
+        wx.switchTab({ url: '/pages/about/about' })
+        return
+      }
+
+      wx.navigateTo({
+        url: path,
+        fail: () => wx.showToast({ title: '页面不存在或已下架', icon: 'none' })
+      })
+    }
   },
 
   // ---------------- 隐藏管理入口：长按品牌名（系统默认长按时长） ----------------

@@ -360,3 +360,27 @@
   color: #1a9b52;
   background: #e8f7ee;
 }
+
+/* ---------------- 轮播图（独立于白色面板，直接贴在页面底色上） ---------------- */
+
+/* 不放在 .sheet 里：白面板只承载分类入口和公告，轮播图作为独立卡片单独占据一段，
+   与下方信息卡片同宽同圆角。上方 20rpx 灰底缝隙把它和白面板隔开。 */
+.banner-box {
+  margin: 20rpx 24rpx 0;
+  border-radius: 20rpx;
+  overflow: hidden;
+  background: #f5f7fb;
+}
+
+/* 固定高度而不是按图比例：不同尺寸的图不会把首页顶得一跳一跳 */
+.banner-swiper {
+  width: 100%;
+  height: 360rpx;
+}
+
+.banner-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #f5f7fb;
+}

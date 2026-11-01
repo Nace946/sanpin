@@ -21,6 +21,14 @@ function buildDesc(item) {
   return text.replace(/\s+/g, ' ').slice(0, DESC_MAX)
 }
 
+/** createdAt 可能是 Date / 时间戳 / ISO 字符串，统一转毫秒（推荐位同分排序用） */
+function timeOf(doc) {
+  const t = doc && doc.createdAt
+  if (!t) return 0
+  const ms = new Date(t).getTime()
+  return isNaN(ms) ? 0 : ms
+}
+
 // 直连失败熔断：一旦权限没配好，本次运行期不再尝试，避免反复报错
 let directBroken = false
 
@@ -69,24 +77,51 @@ function slim(item) {
 async function directList(params) {
   const page = Math.max(1, parseInt(params.page, 10) || 1)
   const size = Math.min(MAX_SIZE, Math.max(1, parseInt(params.size, 10) || 10))
+  const FIELDS = {
+    type: true,
+    title: true,
+    summary: true,
+    content: true,
+    tags: true,
+    images: true,
+    ext: true,
+    createdAt: true
+  }
 
+  // 首页推荐位：与云函数 infoList 的 pinned 分支完全一致
+  // score = 浏览量 × 1% + 权重 × 100%，数据库 orderBy 不支持计算字段，故取池子内存排序
+  if (params.pinned) {
+    const pool = await db()
+      .collection(COLLECTION)
+      .where(buildWhere(params))
+      .orderBy('weight', 'desc')
+      .limit(100)
+      .field(Object.assign({ views: true, weight: true }, FIELDS))
+      .get()
+
+    const scored = (pool.data || [])
+      .map(item => ({
+        item,
+        score: (Number(item.views) || 0) * 0.01 + (Number(item.weight) || 0)
+      }))
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        // 同分时新发布的在前
+        return timeOf(b.item) - timeOf(a.item)
+      })
+
+    const start = (page - 1) * size
+    return { code: 0, list: scored.slice(start, start + size).map(x => slim(x.item)) }
+  }
+
+  // 普通列表（含搜索）：与云函数 infoList 一致，纯按发布时间倒序，不看权重
   const res = await db()
     .collection(COLLECTION)
     .where(buildWhere(params))
-    .orderBy('weight', 'desc')
     .orderBy('createdAt', 'desc')
     .skip((page - 1) * size)
     .limit(size)
-    .field({
-      type: true,
-      title: true,
-      summary: true,
-      content: true,
-      tags: true,
-      images: true,
-      ext: true,
-      createdAt: true
-    })
+    .field(FIELDS)
     .get()
 
   return { code: 0, list: (res.data || []).map(slim) }
@@ -95,7 +130,9 @@ async function directList(params) {
 function cacheKeyOf(params) {
   return [
     // v4：列表开始回传 desc（详细说明一行），旧缓存里没有这个字段，升版本让老条目自然失效
-    'list:v4',
+    // v5：首页推荐位排序改为「浏览量×1% + 权重×100%」，旧缓存里的顺序是旧规则排的，必须作废
+    // v6：列表页改为纯时间倒序（不再按权重），旧缓存是「权重优先」的顺序，必须作废
+    'list:v6',
     params.type || 'all',
     params.sub || '',
     params.keyword || '',

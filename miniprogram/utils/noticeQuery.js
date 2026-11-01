@@ -1,5 +1,9 @@
 // utils/noticeQuery.js
-// 首页公告查询：走 adminAction 的公开 action（noticeList）
+// 公告查询 + 公告刷新时点计算
+//
+// 现状：首页已改为一次拿「公告 + 轮播图」（见 utils/homeMeta.js），
+// 本文件现在主要提供 nextRefreshAt / currentTtl 两个时间计算给 homeMeta 复用；
+// fetchNotices 仍保留，需要单独拉公告的场景（如将来的公告详情页）可直接用。
 //
 // 缓存策略：不是固定 TTL，而是「到下一个刷新点为止」
 //   - 每日 8:00 与 17:00 各刷新一次（时间点见 config.NOTICE_REFRESH_HOURS）

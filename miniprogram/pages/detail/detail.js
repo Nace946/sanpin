@@ -16,11 +16,20 @@ Page({
     imgBoxHeight: 0,
     // 详细说明折叠：needFold 表示内容够长、需要「展开全文」按钮；folded 表示当前处于收起状态
     needFold: false,
-    folded: true
+    folded: true,
+    // 底部操作栏左侧「返回」按钮的文案（带具体分类名，如「返回「出行」列表」）
+    backText: '返回列表'
   },
 
   onLoad(options) {
     this.infoId = options.id || ''
+    // 来源上下文：从列表进来时带上当时的筛选条件（type + tab），
+    // 分享时原样写进 path，接收方打开后能「返回」到同一个分类列表
+    this.from = {
+      type: options.type || '',
+      tab: options.tab || ''
+    }
+
     if (!this.infoId) {
       this.setData({ loading: false })
       return
@@ -45,6 +54,9 @@ Page({
       }
 
       const info = util.decorateItem(result.data)
+      // 标签单独覆盖：decorateItem 是给列表卡片用的，只保留 3 个，
+      // 详情页要完整展示（发布端最多可填 6 个）
+      info.tags = result.data.tags || []
       info.images = result.data.images || []
       info.content = result.data.content || ''
       info.contact = result.data.contact || {}
@@ -57,6 +69,9 @@ Page({
         expired = new Date(info.ext.expireAt).getTime() < Date.now()
       }
 
+      // 返回列表的目标（分类 + 文案）：分享时要写进 path，底部按钮也要用
+      this.backTarget = this.buildBackTarget(info)
+
       // 每次进页面都从「未计算高度」开始，避免复用实例时残留上一张图的高度
       this.rawHeightDone = false
 
@@ -68,7 +83,9 @@ Page({
         needFold: this.needFold(info.content),
         folded: true,
         rawImage: !!info.ext.rawImage,
-        imgBoxHeight: 0
+        imgBoxHeight: 0,
+        // 底部左侧返回按钮的文案：落到这条信息所属的具体分类
+        backText: this.backTarget.text
       })
 
       wx.setNavigationBarTitle({ title: info.typeLabel || '详情' })
@@ -91,6 +108,39 @@ Page({
 
   onToggleFold() {
     this.setData({ folded: !this.data.folded })
+  },
+
+  /**
+   * 计算「返回列表」的目标与文案。原则：能定位到具体分类就绝不停在「全部」。
+   * - 大类：来源没给、或来源本身是 all 时，按 info.type 定位
+   * - 分类：来源带了（用户当前正在看的筛选）优先用来源；没带就用信息自身的行业兜底
+   *   —— 这样从列表「全部」进详情、或页面被分享直达，都不会退回到全部列表
+   * netbar（网吧）不在列表筛选项里，传过去列表也不认，索性不传。
+   */
+  buildBackTarget(info) {
+    const VALID_TABS = ['food', 'market', 'entertainment', 'friend', 'lostfound', 'missing', 'travel', 'nearby', 'other']
+    const ext = info.ext || {}
+    const industry = VALID_TABS.indexOf(ext.industry) !== -1 ? ext.industry : ''
+    const infoType = info.type || 'all'
+
+    let type = this.from.type
+    if (!type || type === 'all') type = infoType
+
+    let tab = this.from.tab
+    if (VALID_TABS.indexOf(tab) === -1) tab = ''
+    // 只有生活信息才有二级分类，房源 / 二手不认 tab
+    if (type !== 'offer') tab = ''
+    if (type === 'offer' && !tab) tab = industry
+
+    let label = ''
+    if (tab) label = util.INDUSTRY_LABEL[tab] || ''
+    else if (type !== 'all') label = util.TYPE_LABEL[type] || ''
+
+    return {
+      type: type || 'all',
+      tab,
+      text: label ? `返回「${label}」列表` : '返回信息列表'
+    }
   },
 
   /** 按信息类型生成扩展字段展示 */
@@ -228,11 +278,56 @@ Page({
     wx.reLaunch({ url: '/pages/index/index' })
   },
 
+  /**
+   * 底部「返回列表」按钮。
+   * 正常链路（含分享落地）详情页下面就是列表页，优先 navigateBack：
+   * 保留列表的滚动位置和缓存，也不会重置页面栈。
+   * 但文案写的是具体分类，所以先把上一层切到那个筛选再返回 ——
+   * 否则从「全部」点进来，返回还是「全部」，文案与行为对不上。
+   */
+  onBackToList() {
+    const pages = getCurrentPages()
+    const prev = pages.length > 1 ? pages[pages.length - 2] : null
+    const t = this.backTarget || { type: 'all', tab: '' }
+
+    if (prev && prev.route === 'pages/list/list') {
+      // 筛选真的变了才需要回到顶部：原来停在第三屏点进来的，
+      // 同一分类返回时应该留在原位，不能被弹回列表头
+      const nextTabs = (prev.data && prev.data.tabs) || []
+      const changed =
+        (prev.data && prev.data.type) !== t.type ||
+        (nextTabs.length > 0 && prev.data.activeTab !== t.tab)
+
+      if (typeof prev.applyFilter === 'function') {
+        prev.applyFilter({ type: t.type, tab: t.tab })
+      }
+      wx.navigateBack({
+        success: () => {
+          if (changed) wx.pageScrollTo({ scrollTop: 0, duration: 0 })
+        }
+      })
+      return
+    }
+
+    // 兜底：旧版分享卡片的 path 仍然直接指向详情页，此时栈里只有本页
+    let url = `/pages/list/list?type=${t.type || 'all'}`
+    if (t.tab) url += `&tab=${t.tab}`
+    wx.reLaunch({ url })
+  },
+
   onShareAppMessage() {
     const info = this.data.info
+    // 落地页是「首页」而不是本页：微信冷启动时 path 指向的页面会成为栈底，
+    // 侧滑就等于关闭小程序。交给首页补出「首页 → 列表 → 详情」三层，
+    // 接收方才能一层层退回去，最后停在首页再退出。
+    const t = this.backTarget || { type: '', tab: '' }
+    let path = `/pages/index/index?open=${this.infoId}`
+    if (t.type) path += `&type=${t.type}`
+    if (t.tab) path += `&tab=${t.tab}`
+
     return {
       title: info ? info.title : '三品信息',
-      path: `/pages/detail/detail?id=${this.infoId}`
+      path
     }
   }
 })
