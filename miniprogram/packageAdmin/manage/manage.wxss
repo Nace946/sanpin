@@ -299,6 +299,35 @@
   color: var(--color-text-light);
 }
 
+/* 手动兜底工具条：定时清理失效时点右侧按钮立即补跑 */
+.tool-bar {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin: 0 var(--gap) 16rpx;
+  padding: 18rpx 24rpx;
+  background: #ffffff;
+  border: 1rpx solid var(--color-border);
+  border-radius: 12rpx;
+}
+
+.tool-text {
+  flex: 1;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: var(--color-text-light);
+}
+
+.tool-op {
+  flex-shrink: 0;
+  padding: 8rpx 22rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+  color: var(--color-primary);
+  border: 1rpx solid var(--color-primary);
+  border-radius: 999rpx;
+}
+
 /* 测试数据提示与写入 */
 .test-bar {
   display: flex;

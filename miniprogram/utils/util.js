@@ -22,9 +22,24 @@ const INDUSTRY_LABEL = {
   market: '超市',
   netbar: '网吧',
   entertainment: '娱乐',
-  // 失物招领不是行业，放在生活信息的分类里作为其中一项
-  lostfound: '失物招领',
+  friend: '交友',
+  // 寻物：原「失物招领」，只改显示名称，内部值仍是 lostfound（历史数据不迁移）
+  lostfound: '寻物',
+  missing: '寻人',
+  travel: '出行',
+  nearby: '周边',
   other: '其他'
+}
+
+/**
+ * 简化板块：只有 标题 / 详细说明 / 标签 / 图片 / 联系人 / 电话。
+ * 不含商家名、地址、活动起止日期、广告位这些字段，也不会有「截止日期」。
+ */
+const SIMPLE_INDUSTRIES = ['friend', 'missing', 'travel', 'nearby', 'other']
+
+/** 该生活信息分类是否为简化板块 */
+function isSimpleIndustry(industry) {
+  return SIMPLE_INDUSTRIES.indexOf(industry) !== -1
 }
 
 /** 时间戳/日期字符串 -> YYYY-MM-DD */
@@ -105,16 +120,17 @@ function decorateItem(item) {
     out.areaText = [ext.category, ext.condition].filter(Boolean).join(' · ')
     out.areaParts = [ext.category, ext.condition].filter(Boolean)
   } else if (item.type === 'offer') {
-    // 失物招领是生活信息下的一个分类（industry === 'lostfound'），不是独立大类
+    // 寻物是生活信息下的一个分类（industry === 'lostfound'），不是独立大类
     const isLostfound = ext.industry === 'lostfound'
     if (isLostfound) {
       // 卡片刻意不重复物品名（标题里已有），只标寻物/招领 + 地点与酬谢
-      out.tagText = SUB_LABEL[ext.lfType] || '失物招领'
+      out.tagText = SUB_LABEL[ext.lfType] || '寻物'
       const reward = ext.reward ? `酬谢 ${ext.reward}` : ''
       out.areaText = [ext.address, reward].filter(Boolean).join(' · ')
       out.areaParts = [ext.address, reward].filter(Boolean)
     } else {
       out.tagText = INDUSTRY_LABEL[ext.industry] || '生活'
+      // 简化板块（交友/寻人/出行/周边/其他）没有商家名与地址，副行通常为空
       out.areaText = [ext.merchantName, ext.address].filter(Boolean).join(' · ')
       out.areaParts = [ext.merchantName, ext.address].filter(Boolean)
     }
@@ -146,6 +162,8 @@ module.exports = {
   TYPE_LABEL,
   SUB_LABEL,
   INDUSTRY_LABEL,
+  SIMPLE_INDUSTRIES,
+  isSimpleIndustry,
   formatDate,
   formatRelative,
   formatPrice,

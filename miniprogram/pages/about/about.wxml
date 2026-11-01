@@ -13,7 +13,7 @@
         本平台<text class="strong">不开放自助注册与自助发布</text>，所有信息由运营方核实后统一发布。
       </view>
       <view class="para">
-        如需<text class="strong">发布信息</text>（房源、闲置物品、生活信息，含失物招领），或发现信息有误、过期、虚假侵权，请添加下方客服微信沟通。
+        如需<text class="strong">发布信息</text>（房源、闲置物品、生活信息：餐饮、超市、娱乐、交友、寻物、寻人、出行、周边等），或发现信息有误、过期、虚假侵权，请添加下方客服微信沟通。
       </view>
 
       <view class="cs-item" bindtap="onCopyWechat">

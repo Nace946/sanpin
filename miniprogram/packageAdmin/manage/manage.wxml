@@ -47,6 +47,12 @@
       <view class="act-btn act-ghost" bindtap="onNotices">公告</view>
     </view>
 
+    <!-- 手动兜底：定时任务每天 00:00 清理过期信息，触发器异常时可点右侧按钮立即补跑 -->
+    <view class="tool-bar">
+      <text class="tool-text">过期信息每天 00:00 自动清理，若列表里仍有已过截止时间的内容，可手动补跑</text>
+      <text class="tool-op" bindtap="onRunExpire">清理过期</text>
+    </view>
+
     <!-- 测试数据提示条 -->
     <view wx:if="{{stats.testCount > 0}}" class="test-bar">
       <text class="test-text">当前有 {{stats.testCount}} 条测试数据</text>
@@ -101,7 +107,7 @@
         class="seed-btn"
         bindtap="onSeed"
       >{{seeding ? '写入中…' : '一键写入 9 条测试数据'}}</view>
-      <view wx:if="{{stats.total === 0}}" class="seed-hint">含房源 / 二手 / 生活信息（含失物招领）示例，写入后可一键清除</view>
+      <view wx:if="{{stats.total === 0}}" class="seed-hint">含房源 / 二手 / 生活信息（含寻物）示例，写入后可一键清除</view>
     </view>
 
     <view wx:else class="m-list">

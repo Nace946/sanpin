@@ -374,7 +374,7 @@ Page({
     wx.showModal({
       title: '写入测试数据',
       content:
-        '将写入 11 条示例信息：房源 3 条、二手 2 条、生活信息 6 条（其中失物招领 2 条；含 1 条已下架、1 条已过期）。写入后可随时一键清除。',
+        '将写入 11 条示例信息：房源 3 条、二手 2 条、生活信息 6 条（其中寻物 2 条；含 1 条已下架、1 条已过期）。写入后可随时一键清除。',
       confirmText: '写入',
       success: async res => {
         if (!res.confirm) return
@@ -429,6 +429,47 @@ Page({
           wx.hideLoading()
           console.error('[manage] clearTest failed', err)
           wx.showToast({ title: '清除失败', icon: 'none' })
+        }
+      }
+    })
+  },
+
+  /**
+   * 手动补跑过期清理。
+   * 定时云函数 expireOffers 每天 00:00 执行，这里是「触发器没跑」（未部署、被误删、执行失败）时的兜底：
+   * 走 adminAction 的 expire 动作，条件与定时任务完全一致，一次调用完成批量置为 expired。
+   */
+  onRunExpire() {
+    wx.showModal({
+      title: '清理过期信息',
+      content: '将把所有已过截止时间、且仍处于「已发布」的生活信息标记为「已过期」，标记后前台列表不再展示。',
+      confirmText: '清理',
+      success: async res => {
+        if (!res.confirm) return
+        wx.showLoading({ title: '处理中…', mask: true })
+
+        try {
+          const result = await cloud.callFunction('adminAction', { action: 'expire' }, { force: true })
+          wx.hideLoading()
+
+          if (result && result.code === 0) {
+            const n = result.updated || 0
+            wx.showToast({
+              title: n > 0 ? `已清理 ${n} 条` : '暂无需要清理的信息',
+              icon: 'none'
+            })
+            // 有新过期才刷新：列表与统计要跟着变，前台缓存也要清掉
+            if (n > 0) {
+              cloud.clearCache()
+              this.bootstrap()
+            }
+          } else {
+            wx.showToast({ title: (result && result.msg) || '清理失败', icon: 'none' })
+          }
+        } catch (err) {
+          wx.hideLoading()
+          console.error('[manage] onRunExpire failed', err)
+          wx.showToast({ title: '清理失败，请稍后重试', icon: 'none' })
         }
       }
     })

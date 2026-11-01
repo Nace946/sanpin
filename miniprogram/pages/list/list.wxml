@@ -30,7 +30,25 @@
       <text wx:if="{{keyword}}" class="search-clear" bindtap="onClearKeyword">✕</text>
     </view>
 
-    <scroll-view wx:if="{{tabs.length}}" class="tabs" scroll-x enable-flex show-scrollbar="{{false}}">
+    <!-- 生活信息：十个分类排两行（每行 5 个），图标 + 文字。
+         选中项用「图标垫浅主色底 + 文字变主色」，不再画下划线（两行各四条会显得碎） -->
+    <view wx:if="{{type === 'offer' && tabs.length}}" class="cat-grid">
+      <view
+        class="cat-item {{activeTab === item.key ? 'cat-on' : ''}}"
+        wx:for="{{tabs}}"
+        wx:key="label"
+        data-key="{{item.key}}"
+        bindtap="onTabTap"
+      >
+        <view class="cat-box">
+          <view class="cat-icon cat-icon-{{item.icon}}"></view>
+        </view>
+        <text class="cat-text">{{item.label}}</text>
+      </view>
+    </view>
+
+    <!-- 全部 / 房源 / 二手：仍是单行横向滚动的纯文字标签 -->
+    <scroll-view wx:elif="{{tabs.length}}" class="tabs" scroll-x enable-flex show-scrollbar="{{false}}">
       <view
         class="tab {{activeTab === item.key ? 'tab-active' : ''}}"
         wx:for="{{tabs}}"

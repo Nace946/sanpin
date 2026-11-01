@@ -1,9 +1,9 @@
 {
   "triggers": [
     {
-      "name": "hourlyExpire",
+      "name": "dailyExpire",
       "type": "timer",
-      "config": "0 0 * * * * *"
+      "config": "0 0 0 * * * *"
     }
   ]
 }

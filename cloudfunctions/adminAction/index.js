@@ -17,6 +17,24 @@ const ADMIN_OPENIDS = String(process.env.ADMIN_OPENIDS || '')
 const VALID_TYPES = ['house', 'secondhand', 'offer']
 const VALID_STATUS = ['published', 'offline', 'deleted']
 
+// 生活信息的行业白名单。加新分类必须同步这里，否则保存时会被静默改写成 other
+const VALID_INDUSTRIES = [
+  'food',
+  'market',
+  'netbar',
+  'entertainment',
+  'friend',
+  'lostfound',
+  'missing',
+  'travel',
+  'nearby',
+  'other'
+]
+
+// 简化板块：只有标题 / 详细说明 / 标签 / 图片 / 联系人 / 电话，
+// 不写商家名、地址、活动起止日期、广告位，也不会被定时任务置为过期
+const SIMPLE_INDUSTRIES = ['friend', 'missing', 'travel', 'nearby', 'other']
+
 // 轮播图集合（前台公开读取，仅管理员可写）
 const BANNER_COLLECTION = 'banners'
 // 轮播图跳转类型：none=不跳转 / list=跳分类列表（房源、二手、优惠）
@@ -101,6 +119,8 @@ exports.main = async (event = {}) => {
         return await setStatus(event)
       case 'setWeight':
         return await setWeight(event)
+      case 'expire':
+        return await runExpire()
       case 'export':
         return await exportCsv(event)
       case 'bannerSave':
@@ -191,14 +211,19 @@ function buildPayload(event) {
 
   if (!title) return { error: '标题不能为空' }
   if (!content) return { error: '详细说明不能为空' }
-  if (!/^\d{6,20}$/.test(phone)) return { error: '联系电话格式不正确' }
+  // 联系电话改为选填：留空直接跳过格式校验
+  if (phone && !/^\d{6,20}$/.test(phone)) return { error: '联系电话格式不正确' }
 
   const ext = buildExt(type, event.ext || {})
-  if (type === 'offer' && ext.industry === 'lostfound') {
-    // 失物招领：物品名称必填，且不需要截止日期
-    if (!ext.itemName) return { error: '请填写丢失 / 拾获的物品' }
-  } else if (type === 'offer' && !ext.expireAt) {
-    return { error: '请设置活动截止日期' }
+  if (type === 'offer') {
+    if (ext.industry === 'lostfound') {
+      // 寻物：物品名称必填，且不需要截止日期
+      if (!ext.itemName) return { error: '请填写丢失 / 拾获的物品' }
+    } else if (SIMPLE_INDUSTRIES.includes(ext.industry)) {
+      // 简化板块（交友 / 寻人 / 出行 / 周边 / 其他）：没有活动日期，也没有必填的扩展字段
+    } else if (!ext.expireAt) {
+      return { error: '请设置活动截止日期' }
+    }
   }
 
   return {
@@ -371,6 +396,32 @@ async function setWeight(event) {
   })
 
   return { code: 0, weight }
+}
+
+/* ---------------- 过期清理 ---------------- */
+
+/**
+ * 手动补跑过期清理。
+ * 与定时云函数 expireOffers 完全同一套条件，用于「每日 00:00 定时任务没生效」时兜底：
+ * 管理台点一下按钮就能立刻把过期的生活信息置为 expired，前台列表随之不再返回。
+ * 内联实现而不是 callFunction 调 expireOffers，省一次云函数调用。
+ */
+async function runExpire() {
+  const res = await db.collection('infos')
+    .where({
+      type: 'offer',
+      status: 'published',
+      'ext.expireAt': _.lt(Date.now())
+    })
+    .update({
+      data: {
+        status: 'expired',
+        updatedAt: db.serverDate()
+      }
+    })
+
+  const updated = (res && res.stats && res.stats.updated) || 0
+  return { code: 0, updated }
 }
 
 /* ---------------- 导出 ---------------- */
@@ -1057,7 +1108,9 @@ function buildExt(type, ext) {
       layout: str(ext.layout).slice(0, 30),
       area: num(ext.area),
       floor: str(ext.floor).slice(0, 20),
-      rent: num(ext.rent)
+      rent: num(ext.rent),
+      // 图片是否按原比例展示（三类通用）
+      rawImage: !!ext.rawImage
     }
   }
 
@@ -1066,24 +1119,30 @@ function buildExt(type, ext) {
       dealType: ext.dealType === 'buy' ? 'buy' : 'sell',
       category: str(ext.category).slice(0, 30),
       condition: str(ext.condition).slice(0, 20),
-      price: num(ext.price)
+      price: num(ext.price),
+      rawImage: !!ext.rawImage
     }
   }
 
-  // 生活信息：失物招领是其中一个分类（industry = 'lostfound'），字段单独一套
-  const industries = ['food', 'market', 'netbar', 'entertainment', 'lostfound', 'other']
-  const industry = industries.includes(ext.industry) ? ext.industry : 'other'
+  // 生活信息：寻物是其中一个分类（industry = 'lostfound'），字段单独一套；
+  // 交友 / 寻人 / 出行 / 周边 / 其他 是简化板块，只有基础字段
+  const industry = VALID_INDUSTRIES.includes(ext.industry) ? ext.industry : 'other'
   const isLostfound = industry === 'lostfound'
+  const isSimple = SIMPLE_INDUSTRIES.includes(industry)
+  // 商家类（餐饮 / 超市 / 网吧 / 娱乐）才有商家名、地址、活动起止日期、广告位
+  const isMerchant = !isLostfound && !isSimple
 
   return {
     industry,
-    merchantName: isLostfound ? '' : str(ext.merchantName).slice(0, 40),
-    // 地点两类共用 address
-    address: str(ext.address).slice(0, 80),
-    startAt: isLostfound ? null : toTimestamp(ext.startAt, false),
-    expireAt: isLostfound ? null : toTimestamp(ext.expireAt, true),
-    isAd: isLostfound ? false : !!ext.isAd,
-    // 以下是失物招领专属字段，其他分类一律留空，避免脏数据
+    merchantName: isMerchant ? str(ext.merchantName).slice(0, 40) : '',
+    // 地点：寻物与商家类共用 address，简化板块留空
+    address: isSimple ? '' : str(ext.address).slice(0, 80),
+    startAt: isMerchant ? toTimestamp(ext.startAt, false) : null,
+    expireAt: isMerchant ? toTimestamp(ext.expireAt, true) : null,
+    isAd: isMerchant ? !!ext.isAd : false,
+    // 图片是否按原比例展示（三类通用）
+    rawImage: !!ext.rawImage,
+    // 以下是寻物专属字段，其他分类一律留空，避免脏数据
     lfType: isLostfound ? (ext.lfType === 'found' ? 'found' : 'lost') : '',
     itemName: isLostfound ? str(ext.itemName).slice(0, 40) : '',
     happenAt: isLostfound ? toTimestamp(ext.happenAt, false) : null,

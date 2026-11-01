@@ -91,15 +91,18 @@
   overflow: hidden;
 }
 
+/* 默认固定高度 420rpx；开启了「按原比例展示」时由行内 style 覆盖为算出来的高度 */
 .img-swiper {
   width: 100%;
   height: 420rpx;
+  transition: height 0.2s ease;
 }
 
+/* 高度跟随 swiper（swiper-item 撑满），固定窗口和原比例两种模式共用 */
 .detail-img {
   display: block;
   width: 100%;
-  height: 420rpx;
+  height: 100%;
   background: #f2f3f5;
 }
 

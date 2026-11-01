@@ -39,10 +39,11 @@
       </view>
     </view>
 
-    <!-- 图片窗口固定高度（420rpx），不随原图尺寸变化；aspectFit 完整显示不裁切，点击查看原图 -->
+    <!-- 默认图片窗口固定高度（420rpx）；发布时开了「按原比例展示」则由 onImgLoad 按第一张图比例算高度 -->
     <view wx:if="{{info.images && info.images.length}}" class="img-card">
       <swiper
         class="img-swiper"
+        style="{{imgBoxHeight ? 'height:' + imgBoxHeight + 'px' : ''}}"
         current="{{imgIndex}}"
         bindchange="onSwiperChange"
         indicator-dots="{{info.images.length > 1}}"
@@ -56,6 +57,7 @@
             mode="aspectFit"
             data-index="{{index}}"
             data-src="{{item}}"
+            bindload="onImgLoad"
             bindtap="onPreview"
             binderror="onImgError"
           />

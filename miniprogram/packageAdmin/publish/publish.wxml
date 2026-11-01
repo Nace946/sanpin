@@ -97,7 +97,7 @@
         </view>
       </block>
 
-      <!-- 生活信息（含失物招领这个分类） -->
+      <!-- 生活信息：餐饮/超市/网吧/娱乐（商家类）、寻物、以及交友/寻人/出行/周边/其他（简化板块） -->
       <block wx:if="{{type === 'offer'}}">
         <view class="form-item">
           <text class="label">所属分类</text>
@@ -106,10 +106,10 @@
           </picker>
         </view>
 
-        <!-- 分类选「失物招领」时切换成失物字段 -->
+        <!-- 分类选「寻物」时切换成失物字段 -->
         <block wx:if="{{industryKey === 'lostfound'}}">
           <view class="form-item">
-            <text class="label">招领性质</text>
+            <text class="label">信息性质</text>
             <picker range="{{lfLabels}}" value="{{lfIndex}}" bindchange="onLfTypeChange">
               <view class="picker-value">{{lfLabels[lfIndex]}}</view>
             </picker>
@@ -134,8 +134,8 @@
           </view>
         </block>
 
-        <!-- 其余分类：商家活动 -->
-        <block wx:else>
+        <!-- 商家类：餐饮 / 超市 / 网吧 / 娱乐 -->
+        <block wx:elif="{{!isSimple}}">
           <view class="form-item">
             <text class="label"><text class="req">*</text>商家 / 发布方</text>
             <input class="input" value="{{ext.merchantName}}" data-field="merchantName" bindinput="onExtInput" placeholder="如：老王麻辣烫" />
@@ -161,6 +161,11 @@
             <switch checked="{{ext.isAd}}" bindchange="onAdChange" color="#2b6ef2" />
           </view>
         </block>
+
+        <!-- 简化板块：交友 / 寻人 / 出行 / 周边 / 其他，不加任何专属字段 -->
+        <view wx:else class="simple-tip">
+          交友、寻人、出行、周边、其他只需填写下方的基本信息（标题、详细说明、标签、图片、联系人、电话），不需要商家和活动日期。
+        </view>
       </block>
 
       <view class="form-item col">
@@ -168,7 +173,7 @@
         <input class="input" value="{{form.title}}" data-field="title" bindinput="onFormInput" placeholder="一句话说清信息内容（30 字内）" maxlength="30" />
       </view>
 
-      <view class="form-item col">
+      <view class="form-item col" wx:if="{{!isSimple}}">
         <text class="label">摘要</text>
         <input class="input" value="{{form.summary}}" data-field="summary" bindinput="onFormInput" placeholder="列表页展示的一句话（40 字内，选填）" maxlength="40" />
       </view>
@@ -211,6 +216,12 @@
           </view>
           <view wx:if="{{form.images.length < 6}}" class="img-add" bindtap="onChooseImage">＋</view>
         </view>
+        <!-- 图片展示方式：默认统一窗口，开启后按原图宽高比 -->
+        <view class="img-mode">
+          <text class="img-mode-label">图片按原比例展示</text>
+          <switch checked="{{ext.rawImage}}" bindchange="onRawImageChange" color="#2b6ef2" />
+        </view>
+        <text class="img-mode-tip">关闭时详情页统一按固定窗口展示，图片可能留有边距；开启后按图片自身宽高比铺满宽度，长截图会占较高，多图以第一张的比例为准。</text>
       </view>
 
       <view class="form-item col">
@@ -219,8 +230,8 @@
       </view>
 
       <view class="form-item col">
-        <text class="label"><text class="req">*</text>联系电话</text>
-        <input class="input" type="number" value="{{form.contactPhone}}" data-field="contactPhone" bindinput="onFormInput" placeholder="需已获得对方授权公开" maxlength="20" />
+        <text class="label">联系电话（选填）</text>
+        <input class="input" type="number" value="{{form.contactPhone}}" data-field="contactPhone" bindinput="onFormInput" placeholder="可留空；填写前需已获得对方授权公开" maxlength="20" />
       </view>
 
     </view>

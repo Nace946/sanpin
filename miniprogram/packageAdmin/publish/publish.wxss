@@ -111,6 +111,17 @@
   border-bottom: 1rpx solid var(--color-border);
 }
 
+/* 简化板块提示：交友 / 寻人 / 出行 / 周边 / 其他 没有专属字段 */
+.simple-tip {
+  margin-bottom: 20rpx;
+  padding: 20rpx 24rpx;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: var(--color-text-sub);
+  background: var(--color-bg);
+  border-radius: 12rpx;
+}
+
 .textarea {
   width: 100%;
   /* 上限提到 1000 字后，适当加高可视区域，长文编辑时不用频繁滚动 */
@@ -170,6 +181,29 @@
   color: var(--color-text-light);
   background: var(--color-bg);
   border-radius: 12rpx;
+}
+
+/* 图片展示方式开关：跟图片列表同一块，开关在右 */
+.img-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--color-border);
+}
+
+.img-mode-label {
+  font-size: 25rpx;
+  color: var(--color-text);
+}
+
+.img-mode-tip {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 21rpx;
+  line-height: 1.6;
+  color: var(--color-text-light);
 }
 
 /* 提交 */

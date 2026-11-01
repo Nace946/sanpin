@@ -10,6 +10,10 @@ Page({
     expired: false,
     extFields: [],
     imgIndex: 0,
+    // 图片展示方式：rawImage 为 true 时按原图宽高比展示（imgBoxHeight 是算出来的高度 px，
+    // 0 表示走默认固定高度），关闭时统一固定窗口
+    rawImage: false,
+    imgBoxHeight: 0,
     // 详细说明折叠：needFold 表示内容够长、需要「展开全文」按钮；folded 表示当前处于收起状态
     needFold: false,
     folded: true
@@ -53,13 +57,18 @@ Page({
         expired = new Date(info.ext.expireAt).getTime() < Date.now()
       }
 
+      // 每次进页面都从「未计算高度」开始，避免复用实例时残留上一张图的高度
+      this.rawHeightDone = false
+
       this.setData({
         loading: false,
         info,
         expired,
         extFields: this.buildExtFields(info),
         needFold: this.needFold(info.content),
-        folded: true
+        folded: true,
+        rawImage: !!info.ext.rawImage,
+        imgBoxHeight: 0
       })
 
       wx.setNavigationBarTitle({ title: info.typeLabel || '详情' })
@@ -105,13 +114,15 @@ Page({
       if (ext.condition) fields.push({ label: '成色', value: ext.condition })
       if (ext.price) fields.push({ label: '价格', value: '¥' + util.formatPrice(ext.price) })
     } else if (info.type === 'offer') {
-      // 生活信息里的失物招领：属性换成物品/地点/时间/酬谢，不显示商家那套
+      // 生活信息里的寻物：属性换成物品/地点/时间/酬谢，不显示商家那套
       if (ext.industry === 'lostfound') {
         if (ext.lfType) fields.push({ label: '信息类型', value: util.SUB_LABEL[ext.lfType] || '' })
         if (ext.itemName) fields.push({ label: '物品', value: ext.itemName })
         if (ext.address) fields.push({ label: '地点', value: ext.address })
         if (ext.happenAt) fields.push({ label: '时间', value: util.formatDate(ext.happenAt) })
         if (ext.reward) fields.push({ label: '酬谢', value: ext.reward })
+      } else if (util.isSimpleIndustry(ext.industry)) {
+        // 简化板块（交友 / 寻人 / 出行 / 周边 / 其他）：只有基础字段，不生成属性行
       } else {
         if (ext.merchantName) fields.push({ label: '商家 / 发布方', value: ext.merchantName })
         if (ext.industry) fields.push({ label: '行业', value: util.INDUSTRY_LABEL[ext.industry] || '' })
@@ -126,6 +137,51 @@ Page({
 
   onSwiperChange(e) {
     this.setData({ imgIndex: e.detail.current || 0 })
+  },
+
+  /**
+   * 按原图比例算图片窗口高度（仅当发布时开启了「图片按原比例展示」）。
+   * 只取第一张图算一次：多张图比例往往不同，逐张改高度会让页面上下跳动。
+   * 宽高取自 image 的 bindload 事件（云存储 fileID 也能拿到，不用先换临时链接）。
+   */
+  onImgLoad(e) {
+    if (!this.data.rawImage || this.rawHeightDone) return
+
+    const detail = e.detail || {}
+    const w = Number(detail.width) || 0
+    const h = Number(detail.height) || 0
+    if (!w || !h) return
+
+    this.rawHeightDone = true
+    const winH = this.getWindowHeight()
+
+    wx.createSelectorQuery()
+      .in(this)
+      .select('.img-swiper')
+      .boundingClientRect(rect => {
+        const boxW = (rect && rect.width) || 0
+        if (!boxW) {
+          // 拿不到宽度就回退到默认窗口高度，不影响阅读
+          this.rawHeightDone = false
+          return
+        }
+        const natural = Math.round((boxW * h) / w)
+        // 上下限：极扁的图会让卡片塌成一条，极长的图会一屏放不下
+        const minH = Math.round(winH * 0.2)
+        const maxH = Math.round(winH * 0.82)
+        this.setData({ imgBoxHeight: Math.max(minH, Math.min(maxH, natural)) })
+      })
+      .exec()
+  },
+
+  /** 取可用窗口高度：新版用 getWindowInfo（需基础库 ≥2.20.1），老版本退回 getSystemInfoSync */
+  getWindowHeight() {
+    try {
+      if (typeof wx.getWindowInfo === 'function') return wx.getWindowInfo().windowHeight
+      return wx.getSystemInfoSync().windowHeight
+    } catch (err) {
+      return 667
+    }
   },
 
   onPreview(e) {

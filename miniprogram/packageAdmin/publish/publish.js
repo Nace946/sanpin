@@ -1,5 +1,6 @@
 // packageAdmin/publish/publish.js
 const cloud = require('../../utils/cloud')
+const util = require('../../utils/util')
 
 // 详细说明的字数上限，wxml 的 maxlength 与计数器都读这个值（改一处即可）
 const CONTENT_MAX = 2000
@@ -15,20 +16,31 @@ const DEAL_MAP = {
   secondhand: [{ key: 'sell', label: '出售' }, { key: 'buy', label: '求购' }]
 }
 
+// 顺序与列表页筛选一致；网吧只有发布端保留（历史数据要用它编辑），列表不出筛选
 const INDUSTRIES = [
   { key: 'food', label: '餐饮' },
   { key: 'market', label: '超市' },
   { key: 'netbar', label: '网吧' },
   { key: 'entertainment', label: '娱乐' },
-  // 失物招领放在生活信息的分类里，选中它时表单切换成失物字段
-  { key: 'lostfound', label: '失物招领' },
+  { key: 'friend', label: '交友' },
+  // 寻物：原「失物招领」，内部值仍是 lostfound
+  { key: 'lostfound', label: '寻物' },
+  { key: 'missing', label: '寻人' },
+  { key: 'travel', label: '出行' },
+  { key: 'nearby', label: '周边' },
   { key: 'other', label: '其他' }
 ]
 
-// 失物招领的两种性质：寻物（我在找）/ 招领（我捡到）
+/**
+ * 简化板块：只有标题 / 详细说明 / 标签 / 图片 / 联系人 / 电话，没有商家与活动日期。
+ * 判断统一走 util.isSimpleIndustry，避免前后端两份名单各改各的
+ */
+const isSimpleIndustry = key => util.isSimpleIndustry(key)
+
+// 寻物的两种性质：我在找（寻物启事）/ 我捡到了（招领）
 const LF_OPTIONS = [
-  { key: 'lost', label: '寻物（我在找）' },
-  { key: 'found', label: '招领（我捡到）' }
+  { key: 'lost', label: '我在找（寻物启事）' },
+  { key: 'found', label: '我捡到了（招领）' }
 ]
 
 /** 时间戳 -> 'YYYY-MM-DD'（北京时间），用于回填日期选择器 */
@@ -55,8 +67,10 @@ Page({
 
     industryIndex: 0,
     industryLabels: INDUSTRIES.map(i => i.label),
-    // 当前选中的行业 key，用于判断是否「失物招领」（wxml 里不比较中文字符串）
+    // 当前选中的行业 key，用于判断是否「寻物」（wxml 里不比较中文字符串）
     industryKey: INDUSTRIES[0].key,
+    // 简化板块（交友/寻人/出行/周边/其他）：表单只显示六个基础字段
+    isSimple: false,
 
     lfIndex: 0,
     lfLabels: LF_OPTIONS.map(o => o.label),
@@ -90,6 +104,8 @@ Page({
       startAt: '',
       expireAt: '',
       isAd: false,
+      // 图片按原比例展示（三类通用）：关闭时详情页统一按固定比例窗口展示，开启后按图片自身宽高比铺满宽度
+      rawImage: false,
       // 失物招领（生活信息下的一个分类）：地点复用 address，日期用 happenAt
       lfType: 'lost',
       itemName: '',
@@ -148,13 +164,16 @@ Page({
       importTip += `；未识别：${unknown.slice(0, 3).join('、')}`
     }
 
+    const industryKey = (INDUSTRIES[industryIndex] || INDUSTRIES[0]).key
+
     this.setData({
       type,
       typeIndex,
       dealIndex,
       dealLabels: dealList.map(d => d.label),
       industryIndex,
-      industryKey: (INDUSTRIES[industryIndex] || INDUSTRIES[0]).key,
+      industryKey,
+      isSimple: type === 'offer' && isSimpleIndustry(industryKey),
       lfIndex: Math.max(0, LF_OPTIONS.findIndex(o => o.key === (form.lfType || (draft.ext || {}).lfType))),
       weight: draft.weight || 0,
       form: {
@@ -201,6 +220,7 @@ Page({
     const industryIndex = Math.max(0, INDUSTRIES.findIndex(i => i.key === ext.industry))
 
     const toStr = v => (v === null || v === undefined ? '' : String(v))
+    const industryKey = (INDUSTRIES[industryIndex] || INDUSTRIES[0]).key
 
     this.setData({
       type,
@@ -208,7 +228,8 @@ Page({
       dealIndex,
       dealLabels: dealList.map(d => d.label),
       industryIndex,
-      industryKey: (INDUSTRIES[industryIndex] || INDUSTRIES[0]).key,
+      industryKey,
+      isSimple: type === 'offer' && isSimpleIndustry(industryKey),
       lfIndex: Math.max(0, LF_OPTIONS.findIndex(o => o.key === ext.lfType)),
       weight: data.weight || 0,
       tags: Array.isArray(data.tags) ? data.tags.slice(0, 3) : [],
@@ -237,6 +258,7 @@ Page({
         startAt: tsToDate(ext.startAt),
         expireAt: tsToDate(ext.expireAt),
         isAd: !!ext.isAd,
+        rawImage: !!ext.rawImage,
         lfType: ext.lfType === 'found' ? 'found' : 'lost',
         itemName: ext.itemName || '',
         happenAt: tsToDate(ext.happenAt),
@@ -298,7 +320,9 @@ Page({
       typeIndex: index,
       type,
       dealIndex: 0,
-      dealLabels: dealList.map(d => d.label)
+      dealLabels: dealList.map(d => d.label),
+      // 切进 / 切出生活信息时，简化板块的字段显示要跟着当前分类重算
+      isSimple: type === 'offer' && isSimpleIndustry(this.data.industryKey)
     })
   },
 
@@ -314,13 +338,15 @@ Page({
 
   onIndustryChange(e) {
     const industryIndex = Number(e.detail.value)
+    const industryKey = (INDUSTRIES[industryIndex] || INDUSTRIES[0]).key
     this.setData({
       industryIndex,
-      industryKey: (INDUSTRIES[industryIndex] || INDUSTRIES[0]).key
+      industryKey,
+      isSimple: isSimpleIndustry(industryKey)
     })
   },
 
-  /** 失物招领：寻物（我在找）/ 招领（我捡到） */
+  /** 寻物：寻物（我在找）/ 招领（我捡到） */
   onLfTypeChange(e) {
     const lfIndex = Number(e.detail.value)
     this.setData({
@@ -344,6 +370,11 @@ Page({
 
   onAdChange(e) {
     this.setData({ 'ext.isAd': e.detail.value })
+  },
+
+  /** 图片展示方式：开启后详情页按图片原比例展示 */
+  onRawImageChange(e) {
+    this.setData({ 'ext.rawImage': e.detail.value })
   },
 
   /** 招租信息的「无中介」开关 */
@@ -444,17 +475,20 @@ Page({
     if (!form.title.trim()) return '请填写标题'
     if (!form.content.trim()) return '请填写详细说明'
 
+    // 联系电话改为选填：填了才校验格式，留空不影响发布
     const phone = form.contactPhone.replace(/[-\s]/g, '')
-    if (!/^\d{6,20}$/.test(phone)) return '请填写正确的联系电话'
+    if (phone && !/^\d{6,20}$/.test(phone)) return '请填写正确的联系电话'
 
     if (type === 'offer') {
-      // 失物招领走另一套必填项：物品名称必填，不需要商家与截止日期
       if (industryKey === 'lostfound') {
+        // 寻物：物品名称必填，不需要商家与截止日期
         if (!String(ext.itemName || '').trim()) return '请填写丢失 / 拾获的物品'
-      } else {
+      } else if (!isSimpleIndustry(industryKey)) {
+        // 商家类（餐饮 / 超市 / 网吧 / 娱乐）：商家与截止日期必填
         if (!ext.merchantName.trim()) return '请填写商家 / 发布方'
         if (!ext.expireAt) return '请选择活动截止日期'
       }
+      // 简化板块（交友 / 寻人 / 出行 / 周边 / 其他）：除标题和详细说明外没有必填项
     }
 
     return ''
@@ -482,9 +516,21 @@ Page({
     } else {
       const industry = (INDUSTRIES[industryIndex] || INDUSTRIES[0]).key
       payloadExt.industry = industry
-      // 失物招领多一个寻物/招领的性质
+      // 寻物多一个寻物/招领的性质
       if (industry === 'lostfound') {
         payloadExt.lfType = (LF_OPTIONS[this.data.lfIndex] || LF_OPTIONS[0]).key
+      }
+      // 简化板块没有商家与活动日期，清掉切换分类可能残留的旧值
+      if (isSimpleIndustry(industry)) {
+        payloadExt.merchantName = ''
+        payloadExt.address = ''
+        payloadExt.startAt = ''
+        payloadExt.expireAt = ''
+        payloadExt.isAd = false
+        payloadExt.lfType = ''
+        payloadExt.itemName = ''
+        payloadExt.happenAt = ''
+        payloadExt.reward = ''
       }
     }
 

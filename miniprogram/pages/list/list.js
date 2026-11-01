@@ -63,14 +63,20 @@ Page({
     if (type === 'house' || type === 'secondhand') return []
 
     if (type === 'offer') {
-      // 失物招领是生活信息下的一个分类，排在「其他」之前
+      // 生活信息的分类：十个，排两行（5 + 5），每项带一个线性图标。
+      // icon 只决定 wxss 里用哪张背景图，筛选逻辑仍然只看 key
       return [
-        { key: '', label: '全部' },
-        { key: 'food', label: '餐饮' },
-        { key: 'market', label: '超市' },
-        { key: 'entertainment', label: '娱乐' },
-        { key: 'lostfound', label: '失物招领' },
-        { key: 'other', label: '其他' }
+        { key: '', label: '全部', icon: 'all' },
+        { key: 'food', label: '餐饮', icon: 'food' },
+        { key: 'market', label: '超市', icon: 'market' },
+        { key: 'entertainment', label: '娱乐', icon: 'fun' },
+        { key: 'friend', label: '交友', icon: 'friend' },
+        // 寻物：原「失物招领」，内部值仍是 lostfound
+        { key: 'lostfound', label: '寻物', icon: 'lost' },
+        { key: 'missing', label: '寻人', icon: 'missing' },
+        { key: 'travel', label: '出行', icon: 'travel' },
+        { key: 'nearby', label: '周边', icon: 'nearby' },
+        { key: 'other', label: '其他', icon: 'other' }
       ]
     }
     // all：Tab 用于切换信息大类
